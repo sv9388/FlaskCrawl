@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="normalheader ">
+    <div class="hpanel">
+        <div class="panel-body">
+            <a class="small-header-action" href="">
+                <div class="clip-header">
+                    <i class="fa fa-arrow-up"></i>
+                </div>
+            </a>
+            <h2 class="font-light m-b-xs">
+                  User Administration Panel
+            </h2>
+            <small>You can control other user's privileges here.</small>
+        </div>
+    </div>
+</div>
+<br /><br />
+<div class="row">
+    <div class="col-lg-12">
+        <div class="hpanel">
+            <div class="panel-heading">
+                <div class="panel-tools">
+                    <a class="showhide"><i class="fa fa-chevron-up"></i></a>
+                </div>
+                Users and Account Limits
+            </div>
+            <div class="panel-body">
+                <table id = "all_users" class="table table-bordered table-striped">
+                    <thead><th>Username</th><th>Max Accounts Permitted</th></thead>
+                    <tbody>
+                        {% for ad_user in all_users %}
+                        <tr>
+                            <td>{{ad_user.username}}</td>
+                            <td><span id = "userid{{ad_user.id}}" pk="{{ad_user.id}}">{{ad_user.max_insta_accounts}}</span></td>
+                        </tr>
+                        <script type="text/javascript">
+                            $('#userid{{ad_user.id}}').editable({
+                                type: 'text',
+                                validate: function(value) {
+                                        var regex = /^[0-9]+$/;
+                                        if(! regex.test(value)) {
+                                            return 'numbers only!';
+                                    }
+                                },
+                                pk: {{ad_user.id}},
+                                url: '/admin/{{ad_user.id}}/max_accounts',
+                                method: "post",
+                                data: {"max_accounts" : $('#userid{{ad_user.id}}').text()},
+                                title: 'Edit maximum permitted accounts for {{ad_user.username}}'
+                            });
+                        </script>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
