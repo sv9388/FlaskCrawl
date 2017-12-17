@@ -31,7 +31,7 @@
                     <tbody>
                         {% for ad_user in all_users %}
                         <tr>
-                            <td>{{ad_user.username}}</td>
+                            <td>{{ad_user.email}}</td>
                             <td><span id = "userid{{ad_user.id}}" pk="{{ad_user.id}}">{{ad_user.max_insta_accounts}}</span></td>
                         </tr>
                         <script type="text/javascript">

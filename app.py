@@ -1,6 +1,6 @@
 from flask import session, url_for, Flask, request, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
-import datetime
+import datetime, requests, json
 
 app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
@@ -20,6 +20,49 @@ def login_required(f):
         return f(*args, user = user, **kwargs)
     return decorated_function
 
+def get_insta_profile_pic(handle):
+    r = requests.get("""https://www.instagram.com/%s/?__a=1"""%handle)
+    return json.loads(r.content)['user']['profile_pic_url']
+
+def get_likes_moving_average(iprofiles):
+  media_likes_mv_avg = []
+  i = 0
+  j = 0
+  while j < len(iprofiles):
+      den = 7 if (j-i)==7 else ((j-i)+1)
+      num = sum([x.media_likes for x in iprofiles[i:j+1]])
+      media_likes_mv_avg.append([datetime.datetime.strptime(iprofiles[j].date, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d'), num * 1./den])
+      j+=1
+      i = i+1 if (j-i)==7 else i
+
+  if len(media_likes_mv_avg)>=14:
+      media_likes_mv_avg = media_likes_mv_avg[-14:]
+  return media_likes_mv_avg
+
+diffact = lambda s, e : [e, "{:.2f} %".format((s-e)*100./s if s > 0 else 0.0), 0] if s>e else [e, "{:.2f} %".format((e-s)*100./e if e > 0 else 0.0), 1]
+def get_activity(handle):
+  tstart_date = datetime.datetime.today()-datetime.timedelta(days=1)
+  mstart_date = datetime.datetime.today()-datetime.timedelta(days=31)
+  end_date = datetime.datetime.today()
+  tsp = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(tstart_date)).first()
+  msp = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(mstart_date)).first()
+  ep = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(end_date)).first()
+
+  deng = diffact(tsp.engagement_rate if tsp else 0, ep.engagement_rate)
+  deng = ["{:.2f} %".format(deng[0]), deng[1], deng[2]]
+  daily_activity = {'following' : diffact(tsp.following_count if tsp else 0, ep.following_count), \
+                    'followers' : diffact(tsp.followers_count if tsp else 0, ep.followers_count), \
+                    'engagement' : deng, \
+                    'likes' : diffact(tsp.media_likes if tsp else 0, ep.media_likes)}#, 'media' : [tsp.media_count if tsp else 0, ep.media_count]})
+
+  meng = diffact(msp.engagement_rate if msp else 0, ep.engagement_rate)
+  meng = ["{:.2f} %".format(meng[0]), meng[1], meng[2]]
+  monthly_activity = {'following' : diffact(msp.following_count if msp else 0, ep.following_count), \
+                      'followers' : diffact(msp.followers_count if msp else 0, ep.followers_count), \
+                      'engagement' : meng, \
+                      'likes' : diffact(tsp.media_likes if tsp else 0, ep.media_likes)}
+  return daily_activity, monthly_activity
+
 @app.route("/logout")
 def logout():
   session.clear()
@@ -35,36 +78,48 @@ def instaboard(handle, user=None):
     session.clear()
     return redirect(url_for('logout'), msg = "Not allowed to do perform this action.")
 
-
   iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
   iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
   iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
-  print(iprofile_today.id)
 
-  dashboard_summary = {'{:30s}'.format('Follower Change') : iprofile_today.followers_count - (iprofile_yestr.followers_count if iprofile_yestr else 0),
-                       '{:30s}'.format('Following Change') : iprofile_today.following_count -  (iprofile_yestr.following_count if iprofile_yestr else 0),
-                       '{:30s}'.format('Post Change') : iprofile_today.media_likes -  (iprofile_yestr.media_likes if iprofile_yestr else 0),
-                       '{:30s}'.format('Engagement Rate Change') : "{:3.1f} %".format((iprofile_today.engagement_rate - (iprofile_yestr.engagement_rate if iprofile_yestr else 0))*100)}
+  if iprofile_today is None or iprofile_yestr is None:
+    return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
+                        profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), \
+                        dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
+                        following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
+                        engagement_rate_raw_data = [], media_likes_mv_avg = [], \
+                        daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
+                        monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
+                        followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
+                        engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
+                        msg = "Nothing here yet! Check back in 2 days." if iprofile_today is None else "Only today's data is available. Check back tomorrow for userful content.")
 
-  today = datetime.datetime.today()
-  start_date = datetime.datetime(today.year, today.month, 1)
-  end_date   = datetime.datetime(today.year, today.month, today.day)
+  daily_activity, monthly_activity = get_activity(handle)
+
+  dashboard_summary = {'Follower Change' : iprofile_today.followers_count - (iprofile_yestr.followers_count if iprofile_yestr else 0),
+                       'Following Change' : iprofile_today.following_count -  (iprofile_yestr.following_count if iprofile_yestr else 0),
+                       'Post Change' : iprofile_today.media_likes -  (iprofile_yestr.media_likes if iprofile_yestr else 0),
+                       'Engagement Rate Change' : "{:3.1f} %".format((iprofile_today.engagement_rate - (iprofile_yestr.engagement_rate if iprofile_yestr else 0))*100)}
+
+  start_date = datetime.datetime.today()-datetime.timedelta(days=15+7)
+  end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
   iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
 
-  print((iprofiles[0].date))
-  following_raw_data =   [[datetime.datetime.strptime(x.date, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d'), x.following_count] for x in iprofiles]
-  followers_raw_data =   [[datetime.datetime.strptime(x.date, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d'), x.followers_count] for x in iprofiles]
-  media_likes_raw_data = [[datetime.datetime.strptime(x.date, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d'), x.media_likes] for x in iprofiles]
-  engagement_rate_raw_data = [[datetime.datetime.strptime(x.date, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d'), x.engagement_rate] for x in iprofiles]
+  db_date = lambda dt : datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d')
+  following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15)) ]
+  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15))]
+  engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15))]
+  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15))]
+  media_likes_mv_avg = get_likes_moving_average(iprofiles)
 
-  following_raw_data =   [[following_raw_data[i][0], following_raw_data[i][1] - following_raw_data[i-1][1]] for i in range(1, len(following_raw_data))]
-  followers_raw_data =   [[followers_raw_data[i][0], followers_raw_data[i][1] - followers_raw_data[i-1][1]] for i in range(1, len(followers_raw_data))]
-  media_likes_raw_data = [[media_likes_raw_data[i][0], media_likes_raw_data[i][1] - media_likes_raw_data[i-1][1]] for i in range(1, len(media_likes_raw_data))]
-  engagement_rate_raw_data = [[engagement_rate_raw_data[i][0], engagement_rate_raw_data[i][1] - engagement_rate_raw_data[i-1][1]] for i in range(1, len(engagement_rate_raw_data))]
-
-  return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), profile_pic = user.profile_pic, \
-                        handle = handle, dashboard_summary = dashboard_summary, following_raw_data = following_raw_data, \
-                        followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, engagement_rate_raw_data = engagement_rate_raw_data)
+  print(followers_raw_data)
+  print(engagement_rate_raw_data)
+  return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
+                        profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), \
+                        dashboard_summary = dashboard_summary, \
+                        following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
+                        engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
+                        monthly_activity = monthly_activity, followers_today = iprofile_today.followers_count, engagement_today = iprofile_today.engagement_rate)
 
 @app.route("/instaaccounts", methods = ["GET", "POST"])
 @login_required
@@ -166,20 +221,20 @@ def register():
     db.session.commit()
     return render_template('register.html', msg = "Registration complete. Login to the app to access features")
 
-@app.route('/user', methods = ['GET', 'PUT'])
+@app.route('/user', methods = ['GET', 'POST'])
 @login_required
 def app_user(user = None):
   if request.method == 'GET':
-    return render_template('profile.html', user = user)
-  if request.method == "PUT":
-    if request.form['password'] != request.form['rpassword']:
-        return render_template('profile.html', user = user, msg = "Passwords don't match")
-    user.email = request.form['email']
+    return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, email = user.email)
+  if request.method == "POST":
+    if request.form['password'] != request.form['cpassword']:
+        return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, email = user.email)
     user.username = request.form['username']
-    user.hash_password(request.form['password'])
+    if request.form['password'] != '':
+        user.hash_password(request.form['password'])
     db.session.add(user)
     db.session.commit()
-    return render_template('profile.html', user = user, msg = "User details upgraded successfully.")
+    return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, email = user.email, msg = "User details upgraded successfully.")
 
 @app.route('/password/forgot', methods = ['GET', 'POST'])
 def forgot_password():

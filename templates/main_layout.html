@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/static/vendor/metisMenu/dist/metisMenu.css" />
     <link rel="stylesheet" href="/static/vendor/animate.css/animate.css" />
     <link rel="stylesheet" href="/static/vendor/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/static/vendor/toastr/build/toastr.min.css" />
 
     <!-- App styles -->
     <link rel="stylesheet" href="/static/fonts/pe-icon-7-stroke/css/pe-icon-7-stroke.css" />
@@ -27,32 +28,41 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.css" rel = "stylesheet" />
 </head>
 <body class={% block bodyclass %}{% endblock %}> <!-- > -->
-{% if msg %}
-<div class="alert alert-danger alert-dismissable">
-    <a class="close" data-dismiss="alert" aria-label="close" href="#">×</a>
-    {{msg}}
-</div>
-{% endif %}
 <script src="/static/vendor/jquery/dist/jquery.min.js"></script>
 <script src="/static/vendor/jquery-ui/jquery-ui.min.js"></script>
 <script src="/static/vendor/slimScroll/jquery.slimscroll.min.js"></script>
 <script src="/static/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="/static/vendor/jquery-flot/jquery.flot.js"></script>
+<script src="/static/vendor/jquery-flot/jquery.flot.time.js"></script>
 <script src="/static/vendor/jquery-flot/jquery.flot.resize.js"></script>
 <script src="/static/vendor/jquery-flot/jquery.flot.pie.js"></script>
-<script src="/static/vendor/jquery-flot/jquery.flot.time.js"></script>
 <script src="/static/vendor/flot.curvedlines/curvedLines.js"></script>
 <script src="/static/vendor/jquery.flot.spline/index.js"></script>
 <script src="/static/vendor/metisMenu/dist/metisMenu.min.js"></script>
 <script src="/static/vendor/iCheck/icheck.min.js"></script>
 <script src="/static/vendor/peity/jquery.peity.min.js"></script>
 <script src="/static/vendor/sparkline/index.js"></script>
+<script src="/static/vendor/toastr/build/toastr.min.js"></script>
 
 <!-- App scripts -->
 <script src="/static/scripts/homer.js"></script>
 <script src="/static/scripts/charts.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tagsinput/0.8.0/bootstrap-tagsinput.min.js"></script>
+
+<script type="text/javascript">
+    toastr.options = {
+        "debug": false,
+        "newestOnTop": false,
+        "positionClass": "toast-top-center",
+        "closeButton": true,
+        "toastClass": "animated fadeInDown",
+    };
+
+{% if msg %}
+    toastr.warning('{{msg}}');
+{% endif %}
+</script>
 
 <script>
 $.fn.editable.defaults.mode = 'inline';

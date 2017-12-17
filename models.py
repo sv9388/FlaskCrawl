@@ -87,4 +87,3 @@ class IprofileData(db.Model):
     iprofile_id = db.Column(db.String(255), db.ForeignKey('iprofile.instagram_id'), nullable=False)
     iprofile = db.relationship('Iprofile', backref=backref("iprof_data", cascade="all,delete"), lazy = True)
     __table_args__ = (UniqueConstraint('iprofile_id', 'date', name='_profile_data_uc'),)
-

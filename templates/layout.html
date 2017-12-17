@@ -71,14 +71,10 @@
 <aside id="menu">
     <div id="navigation">
         <div class="profile-picture">
-            <a href="index.html">
-                <img src="/static/images/{{profile_pic}}" class="img-circle m-b" alt="logo">
-            </a>
-
             <div class="stats-label text-color">
                 <div class="dropdown">
                     <a class="dropdown-toggle" href="#" data-toggle="dropdown">
-                        <span class="font-extra-bold font-uppercase">{{username}}</span>
+                        <span class="font-extra-bold font-uppercase"><h2>{{username}}</h2></span>
                     </a>
                     <ul class="dropdown-menu animated flipInX m-t-xs">
                         <li><a href="/user">Profile</a></li>
@@ -88,7 +84,7 @@
         </div>
 
         <ul class="nav" id="side-menu">
-            <li class="active">
+            <li>
                 <a href="#"> <span class="nav-label">Accounts Dashboard</span><span class="fa arrow"></span></a>
                 <ul class="nav nav-second-level">
                     {% for x in accounts %}
@@ -96,7 +92,7 @@
                     {% endfor %}
                 </ul>
             </li>
-            <li>
+            <li class="active">
                 <a href="/instaaccounts"> <span class="nav-label">Account Management</span><span class="label label-warning pull-right">NEW</span> </a>
             </li>
             {% if 'admin' in roles %}

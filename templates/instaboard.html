@@ -1,20 +1,5 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="normalheader ">
-    <div class="hpanel">
-        <div class="panel-body">
-            <a class="small-header-action" href="">
-                <div class="clip-header">
-                    <i class="fa fa-arrow-up"></i>
-                </div>
-            </a>
-            <h2 class="font-light m-b-xs">
-                  @{{handle}}
-            </h2>
-        </div>
-    </div>
-</div>
-<br /><br />
 <div class = "row">
 {% for x in dashboard_summary %}
     <div class="col-md-3">
@@ -26,13 +11,55 @@
                         {{dashboard_summary[x]}}
                     </p>
                     <small>
-                        Pending text
+                        {{x}} since <div class ="dashboarddateinfo"></div>
                     </small>
                 </div>
             </div>
         </div>
     </div>
 {% endfor %}
+</div>
+<div class="row ">
+    <div class="hpanel">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <br/><br/><br/>
+                    <div class="small">
+                        <i class="fa fa-bolt"></i> Followers
+                    </div>
+                    <div>
+                        <h1 class="font-extra-bold m-t-xl m-b-xs">
+                            {{followers_today}}
+                        </h1>
+                        <small>Followers today</small>
+                    </div>
+                </div>
+                <div class="col-md-4" style="height: 240px">
+                    <div class="profile-picture">
+                        <img src="{{iprofile_pic}}" class="img-circle m-b" alt="logo">
+                        <div class="stats-label text-color">
+                            <span class="font-extra-bold font-uppercase">
+                                <h2 class="font-light m-b-xs">@{{handle}}</h2>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <br/><br/><br/>
+                    <div class="small">
+                        <i class="fa fa-clock-o"></i> Engagement Rate
+                    </div>
+                    <div>
+                        <h1 class="font-extra-bold m-t-xl m-b-xs">
+                                {{'%.2f' %  (engagement_today * 100)}} %
+                        </h1>
+                        <small>Engagement Rate today</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <div class = "row">
     <div class="col-lg-9">
@@ -42,11 +69,11 @@
                     <a class="showhide"><i class="fa fa-chevron-up"></i></a>
                     <a class="closebox"><i class="fa fa-times"></i></a>
                 </div>
-                Following growth in the past month
+                Followers in the past 14 days
             </div>
             <div class="panel-body">
                 <div class="flot-chart">
-                    <div class="flot-chart-content" id="followingchart"></div>
+                    <div class="flot-chart-content" id="followerschart"></div>
                 </div>
             </div>
         </div>
@@ -61,33 +88,40 @@
                 Activity
             </div>
             <div class="panel-body list">
-
                 <div class="pull-right">
-                    <a href="#" class="btn btn-xs btn-default">Today</a>
-                    <a href="#" class="btn btn-xs btn-default">Month</a>
+                    <a id="activitytoday" class="btn btn-xs btn-default">Today</a>
+                    <a id="activitymonth" class="btn btn-xs btn-default">Month</a>
                 </div>
-                <div class="panel-title">Last Activity</div>
-                <small class="fo">This is simple example</small>
+                <div class="panel-title">Latest Instagram Interactions</div>
+                <small class="fo">Your latest activity</small>
                 <div class="list-item-container">
                     <div class="list-item">
-                        <h3 class="no-margins font-extra-bold text-success">2,773</h3>
-                        <small>Tota Messages Sent</small>
-                        <div class="pull-right font-bold">98% <i class="fa fa-level-up text-success"></i></div>
+                        <h3 id="activity_followers_cnt" class="no-margins font-extra-bold text-success">{{daily_activity['followers'][0]}}</h3>
+                        <small>Total Followers</small>
+                        <div id="activity_followers_percentage" class="pull-right font-bold">{{daily_activity['followers'][1]}}
+                            <i id="afolstatuschange" class="text-color3"></i>
+                        </div>
                     </div>
                     <div class="list-item">
-                        <h3 class="no-margins font-extra-bold text-color3">4,422</h3>
-                        <small>Last activity</small>
-                        <div class="pull-right font-bold">13% <i class="fa fa-level-down text-color3"></i></div>
+                        <h3 id = "activity_following_cnt" class="no-margins font-extra-bold text-color3">{{daily_activity['following'][0]}}</h3>
+                        <small>Total Following</small>
+                        <div id="activity_following_percentage" class="pull-right font-bold">{{daily_activity['following'][1]}}
+                            <i id="afngstatuschange" class="text-color3"></i>
+                        </div>
                     </div>
                     <div class="list-item">
-                        <h3 class="no-margins font-extra-bold text-color3">9,180</h3>
-                        <small>Monthly income</small>
-                        <div class="pull-right font-bold">22% <i class="fa fa-bolt text-color3"></i></div>
+                        <h3 id="activity_engagement_cnt" class="no-margins font-extra-bold text-color3">{{daily_activity['engagement'][0]}}</h3>
+                        <small>Total Engagement Rate</small>
+                        <div id="activity_engagement_percentage" class="pull-right font-bold">{{daily_activity['engagement'][1]}}
+                            <i id="aengstatuschange" class="text-color3"></i>
+                        </div>
                     </div>
                     <div class="list-item">
-                        <h3 class="no-margins font-extra-bold text-success">1,450</h3>
-                        <small>Tota Messages Sent</small>
-                        <div class="pull-right font-bold">44% <i class="fa fa-level-up text-success"></i></div>
+                        <h3 id="activity_media_cnt" class="no-margins font-extra-bold text-success">0</h3>
+                        <small>Total posts</small>
+                        <div id="activity_media_percentage" class="pull-right font-bold">0%
+                            <i id="aposstatuschange" class="text-color"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -102,11 +136,11 @@
                     <a class="showhide"><i class="fa fa-chevron-up"></i></a>
                     <a class="closebox"><i class="fa fa-times"></i></a>
                 </div>
-                Following growth in the past month
+                Engagement Rate in the past 14 days
             </div>
             <div class="panel-body">
                 <div class="flot-chart">
-                    <div class="flot-chart-content" id="followerschart"></div>
+                    <div class="flot-chart-content" id="engagementchart"></div>
                 </div>
             </div>
         </div>
@@ -130,110 +164,256 @@
         </div>
     </div>
 </div>
+<div class = "row">
+    <div class="col-lg-12">
+        <div class="hpanel">
+            <div class="panel-heading">
+                <div class="panel-tools">
+                    <a class="showhide"><i class="fa fa-chevron-up"></i></a>
+                    <a class="closebox"><i class="fa fa-times"></i></a>
+                </div>
+                Followers vs Average likes in the past 14 days
+            </div>
+            <div class="panel-body">
+                <div class="flot-chart">
+                    <div class="flot-chart-content" id="followlikechart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script type="text/javascript">
-        var followingrawdata = []
-        var arr = []
-        {% for x in following_raw_data %}
-          followingrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
-          arr.push({{x[1]}});
-        {% endfor %}
-        var arrmax = Math.max.apply(null, arr) ;
-        var arrmin = Math.min.apply(null, arr) ;
-        var arrticks = Math.round((arrmax - arrmin)/10);
-        console.log(followingrawdata);
-        var followingdata = [
-            {
-                label: "line",
-                data: followingrawdata
-            }
-        ];
+    var followersrawdata = []
+    var arr = []
+    {% for x in followers_raw_data %}
+      followersrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
+      arr.push({{x[1]}});
+    {% endfor %}
+    var arrmax = Math.max.apply(null, arr) ;
+    var arrmin = Math.min.apply(null, arr) ;
+    var arrticks = Math.round((arrmax - arrmin)/10);
+    console.log(followersrawdata);
+    var followersdata = [
+        {
+            label: "line",
+            data: followersrawdata
+        }
+    ];
 
-        var followingChartOptions = {
-            series: {
-                lines: {
-                    show: true,
-                    lineWidth: 1,
-                    fill: true,
-                    fillColor: {
-                        colors: [ { opacity: 0.5 }, { opacity: 0.5 }
-                        ]
-                    }
+    var followersChartOptions = {
+        series: {
+            lines: {
+                show: true,
+                lineWidth: 1,
+                fill: true,
+                fillColor: {
+                    colors: [ { opacity: 0.5 }, { opacity: 0.5 }
+                    ]
                 }
-            },
-            xaxis: {
-                mode: "time",
-                timeformat:"%y-%m-%d %H:%M:%S",
-                tickSize: [1, 'day']
-            },
-            yaxis: {
-                min: arrmin - arrticks,
-                max: arrmax + arrticks,
-                tickSize: arrticks
-            },
-            colors: ["#62cb31"],
-            grid: {
-                tickColor: "#e4e5e7",
-                borderWidth: 1,
-                borderColor: '#e4e5e7',
-                color: '#6a6c6f'
-            },
-            legend: {
-                show: false
-            },
-            tooltip: true,
-            tooltipOpts: {
-                content: "x: %x, y: %y"
             }
-        };
+        },
+        xaxis: {
+            mode: "time",
+            timeformat:"%y-%m-%d",
+            tickSize: [1, 'day']
+        },
+        yaxis: {
+            min: arrmin - arrticks,
+            max: arrmax + arrticks,
+            tickSize: arrticks
+        },
+        colors: ["#62cb31"],
+        grid: {
+            tickColor: "#e4e5e7",
+            borderWidth: 1,
+            borderColor: '#e4e5e7',
+            color: '#6a6c6f'
+        },
+        legend: {
+            show: false
+        },
+        tooltip: true,
+        tooltipOpts: {
+            content: "x: %x, y: %y"
+        }
+    };
+    $.plot($("#followerschart"), followersdata, followersChartOptions);
 
-        $.plot($("#followingchart"), followingdata, followingChartOptions);
+    var engagementrawdata = []
+    {% for x in engagement_rate_raw_data %}
+      engagementrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
+    {% endfor %}
+    console.log(engagementrawdata);
+    var engagementdata = [
+        {
+            label: "line",
+            data: engagementrawdata
+        }
+    ];
 
-        var followersrawdata = []
-        {% for x in followers_raw_data %}
-          followersrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
-        {% endfor %}
-        console.log(followersrawdata);
-        var followersdata = [
-            {
-                label: "line",
-                data: followersrawdata
-            }
-        ];
-
-        var followersChartOptions = {
-            series: {
-                lines: {
-                    show: true,
-                    lineWidth: 1,
-                    fill: true,
-                    fillColor: {
-                        colors: [ { opacity: 0.5 }, { opacity: 0.5 }
-                        ]
-                    }
+    var engagementChartOptions = {
+        series: {
+            lines: {
+                show: true,
+                lineWidth: 1,
+                fill: true,
+                fillColor: {
+                    colors: [ { opacity: 0.5 }, { opacity: 0.5 }
+                    ]
                 }
-            },
-            xaxis: {
-                mode: "time",
-                timeformat:"%y-%m-%d %H:%M:%S",
-                tickSize: [1, 'day']
-            },
-            colors: ["#62cb31"],
-            grid: {
-                tickColor: "#e4e5e7",
-                borderWidth: 1,
-                borderColor: '#e4e5e7',
-                color: '#6a6c6f'
-            },
-            legend: {
-                show: false
-            },
-            tooltip: true,
-            tooltipOpts: {
-                content: "x: %x, y: %y"
             }
-        };
+        },
+        xaxis: {
+            mode: "time",
+            timeformat:"%y-%m-%d",
+            tickSize: [1, 'day']
+        },
+        colors: ["#62cb31"],
+        grid: {
+            tickColor: "#e4e5e7",
+            borderWidth: 1,
+            borderColor: '#e4e5e7',
+            color: '#6a6c6f'
+        },
+        legend: {
+            show: false
+        },
+        tooltip: true,
+        tooltipOpts: {
+            content: "x: %x, y: %y"
+        }
+    };
+    $.plot($("#engagementchart"), engagementdata, engagementChartOptions);
 
-        $.plot($("#followerschart"), followersdata, followersChartOptions);
+    var likedata = []
+    var arr = []
+    {% for x in media_likes_mv_avg %}
+      likedata.push([new Date("{{x[0]}}"), {{x[1]}}]);
+      arr.push({{x[1]}});
+    {% endfor %}
+    console.log(likedata);
+    var followlikedata = [
+				{ data: likedata, label: "7-day moving average likes (Right Axis)" },
+				{ data: followersrawdata, label: "Followers count (Left Axis)", yaxis: 2 }
+    ];
+
+    var followLikeChartOptions = {
+        xaxis: {
+            mode: "time",
+            timeformat:"%y-%m-%d",
+            tickSize: [1, 'day']
+        },
+        yaxes: [ {
+					alignTicksWithAxis:  1,
+					position: "right"
+				} ],
+        colors: ["#62cb31", "#0000ff"],
+        grid: {
+            tickColor: "#e4e5e7",
+            borderWidth: 1,
+            borderColor: '#e4e5e7',
+            color: '#6a6c6f'
+        },
+        legend: { position: "sw" },
+        tooltip: true,
+        tooltipOpts: {
+            content: "x: %x, y: %y"
+        }
+    };
+    $.plot($("#followlikechart"), followlikedata, followLikeChartOptions);
+
+</script>
+<script type="text/javascript">
+
+$("#activitytoday").on('click', function(e){
+    e.preventDefault();
+    $("#activity_followers_cnt").text("{{daily_activity['followers'][0]}}");
+    $("#activity_followers_percentage").text("{{daily_activity['followers'][1]}}");
+    {% if daily_activity['followers'][2] == 1 %}
+    $("#afolstatuschange").addClass("fa-level-up");
+    {% else %}
+    $("#afolstatuschange").addClass("fa level-down");
+    {% endif %}
+
+    $("#activity_following_cnt").text("{{daily_activity['following'][0]}}");
+    $("#activity_following_percentage").text("{{daily_activity['following'][1]}}");
+    {% if daily_activity['following'][2] == 1 %}
+    $("#afngstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#afngstatuschange").addClass("fa level-down");
+    {% endif %}
+
+    $("#activity_engagement_cnt").text("{{daily_activity['engagement'][0]}}");
+    $("#activity_engagement_percentage").text("{{daily_activity['engagement'][1]}}");
+    {% if daily_activity['engagement'][2] == 1 %}
+    $("#aengstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#aengstatuschange").addClass("fa level-down");
+    {% endif %}
+
+    $("#activity_media_cnt").text("{{daily_activity['likes'][0]}}");
+    $("#activity_media_percentage").text("{{daily_activity['likes'][1]}}");
+    {% if daily_activity['likes'][2] == 1 %}
+    $("#aposstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#aposstatuschange").addClass("fa level-down");
+    {% endif %}
+
+});
+$("#activitymonth").on('click', function(e){
+    e.preventDefault();
+    $("#activity_followers_cnt").text("{{monthly_activity['followers'][0]}}");
+    $("#activity_followers_percentage").text("{{monthly_activity['followers'][1]}}");
+    {% if monthly_activity['followers'][2] == 1 %}
+    $("#afolstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#afolstatuschange").addClass("fa level-down");
+    {% endif %}
+
+    $("#activity_following_cnt").text("{{monthly_activity['following'][0]}}");
+    $("#activity_following_percentage").text("{{monthly_activity['following'][1]}}");
+    {% if monthly_activity['following'][2] == 1 %}
+    $("#afngstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#afngstatuschange").addClass("fa level-down");
+    {% endif %}
+
+    $("#activity_engagement_cnt").text("{{monthly_activity['engagement'][0]}}");
+    $("#activity_engagement_percentage").text("{{monthly_activity['engagement'][1]}}");
+    {% if monthly_activity['engagement'][2] == 1 %}
+    $("#aengstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#aengstatuschange").addClass("fa level-down");
+    {% endif %}
+
+    $("#activity_media_cnt").text("{{monthly_activity['likes'][0]}}");
+    $("#activity_media_percentage").text("{{monthly_activity['likes'][1]}}");
+    {% if monthly_activity['likes'][2] == 1 %}
+    $("#aposstatuschange").addClass("fa fa-level-up");
+    {% else %}
+    $("#aposstatuschange").addClass("fa fa-level-down");
+    {% endif %}
+});
+
+function formatDate(date) {
+  var monthNames = [
+    "January", "February", "March",
+    "April", "May", "June", "July",
+    "August", "September", "October",
+    "November", "December"
+  ];
+
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+
+  return day + ' ' + monthNames[monthIndex] + ' ' + year;
+}
+
+$today = new Date();
+$yesterday = new Date($today);
+$yesterday.setDate($today.getDate() - 1);
+$(".dashboarddateinfo").text(formatDate($yesterday));
 </script>
 {% endblock %}
