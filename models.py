@@ -79,7 +79,7 @@ class Iprofile(db.Model):
 
 class IprofileData(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.Integer)
+    date = db.Column(db.DateTime)
     followers_count = db.Column(db.Integer, default = 0)
     following_count = db.Column(db.Integer, default = 0)
     media_likes = db.Column(db.Integer, default = 0)
