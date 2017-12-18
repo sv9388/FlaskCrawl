@@ -1,10 +1,11 @@
-import scrapy, json, sqlite3, logging, datetime
+import scrapy, json, sqlite3, logging, datetime, os, psycopg2
 
 insta_fs = "https://www.instagram.com/%s/?__a=1"
 MAX_ENGAGEMENT_POSTS = 10
+DB_NAME = os.environ.get('DATABASE_URL')
 
 def get_handles():
-    conn = sqlite3.connect('/home/smsilo/insta/instamanager.db')
+    conn = psycopg2.connect(DB_NAME)
     c = conn.cursor()
     insta_handles = []
     try:

@@ -48,6 +48,7 @@ pytz==2017.3
 requests==2.10.0
 queuelib==1.4.2
 Scrapy==1.4.0
+scrapy-proxies==0.4
 service-identity==17.0.0
 simplejson==3.13.2
 six==1.11.0

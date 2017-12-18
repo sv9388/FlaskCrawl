@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
-import sys
-sys.path.append("/home/smsilo/insta")
-from insta_cfg import DB_NAME
-import sqlite3
-
+import os, psycopg2
+DB_NAME = os.environ.get('DATABASE_URL')
 stmt_fs = """insert into iprofile_data (iprofile_id, date, followers_count, following_count, media_likes, engagement_rate) values ( '%s', '%s', %d, %d, %d, %f )"""
 class InstacrawlPipeline(object):
     def __init__(self):
-        self.conn = sqlite3.connect('/home/smsilo/insta/instamanager.db')
+        self.conn = psycopg2.connect(DB_NAME)
 
     def process_item(self, item, spider):
         c = self.conn.cursor()
