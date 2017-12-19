@@ -68,7 +68,7 @@ def logout():
   session.clear()
   return render_template('login.html')
 
-@app.route("/instaboard/<string:handle>")
+@app.route("/ig/<string:handle>")
 @login_required
 def instaboard(handle, user=None):
   print(user)
