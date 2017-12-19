@@ -1,2 +1,2 @@
 web: gunicorn app:app
-scraper: ./scraper.sh
+scraper: ./scrape.sh
