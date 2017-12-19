@@ -9,7 +9,8 @@ def get_handles():
     c = conn.cursor()
     insta_handles = []
     try:
-        op = c.execute("SELECT instagram_id from iprofile")
+        c.execute("SELECT instagram_id from iprofile")
+        op = c.fetchall()
         insta_handles = list(set([x[0] for x in op]))
     except:
         pass
