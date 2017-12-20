@@ -76,7 +76,7 @@ def instaboard(handle, user=None):
   accounts = [x.instagram_id for x in user.iprofiles]
   if handle not in accounts:
     session.clear()
-    return redirect(url_for('logout'), msg = "Not allowed to do perform this action.")
+    return render_template('login.html', msg = "Not a registered account to monitor.")
 
   iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
   iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
@@ -106,10 +106,10 @@ def instaboard(handle, user=None):
   iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
 
   db_date = lambda dt : datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d')
-  following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15)) ]
-  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15))]
-  engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15))]
-  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles for x in iprofiles if x.date >= DB_DATE_FS.format(datetime.datetime.today()-datetime.timedelta(days=15))]
+  following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15)) ]
+  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
+  engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
+  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
   media_likes_mv_avg = get_likes_moving_average(iprofiles)
 
   print(followers_raw_data)
@@ -159,7 +159,7 @@ def instaaccounts(user = None):
 def admin(user = None):
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
-        return redirect(url_for('login'), msg = "Not allowed to do perform this action.")
+        return render_template('login.html', msg = "Not allowed to do perform this action.")
     all_users = User.query.all()
     return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, all_users = all_users)
 
@@ -170,7 +170,7 @@ def max_acc_edit(id, user = None):
     print(request.form)
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
-        return redirect(url_for('login'), msg = "Not allowed to do perform this action.")
+        return render_template('login.html', msg = "Not allowed to do perform this action.")
     eduser = User.query.filter_by(id = id).first()
     eduser.max_insta_accounts = int(request.form['value'])
     db.session.add(eduser)
