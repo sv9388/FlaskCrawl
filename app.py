@@ -31,7 +31,7 @@ def get_likes_moving_average(iprofiles):
   while j < len(iprofiles):
       den = 7 if (j-i)==7 else ((j-i)+1)
       num = sum([x.media_likes for x in iprofiles[i:j+1]])
-      media_likes_mv_avg.append([datetime.datetime.strptime(iprofiles[j].date, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d'), num * 1./den])
+      media_likes_mv_avg.append([iprofiles[j].date.strftime('%Y/%m/%d'), num * 1./den])
       j+=1
       i = i+1 if (j-i)==7 else i
 
