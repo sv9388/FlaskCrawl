@@ -105,7 +105,7 @@ def instaboard(handle, user=None):
   end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
   iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
 
-  db_date = lambda dt : datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S').strftime('%Y/%m/%d')
+  db_date = lambda dt : datetime.datetime.strftime('%Y/%m/%d')
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15)) ]
   followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
   engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
