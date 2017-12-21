@@ -1,6 +1,16 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class = "row">
+    <form method="post" action="{% url_for('instaboard', handle = handle)%}" id="dateiboardform">
+        <div class="input-daterange input-group" id="datepicker">
+            <input type="text" class="input-sm form-control" name="start"/>
+            <span class="input-group-addon">to</span>
+            <input type="text" class="input-sm form-control" name="end"/>
+        </div>
+    </form>
+</div>
+
+<div class = "row">
 {% for x in dashboard_summary %}
     <div class="col-md-3">
         <div class="hpanel {{loop.cycle('hbggreen', 'hbgblue', 'hbgyellow', 'hbgred')}}">
@@ -117,9 +127,9 @@
                         </div>
                     </div>
                     <div class="list-item">
-                        <h3 id="activity_media_cnt" class="no-margins font-extra-bold text-success">0</h3>
+                        <h3 id="activity_media_cnt" class="no-margins font-extra-bold text-success">{{daily_activity['likes'][0]}}</h3>
                         <small>Total posts</small>
-                        <div id="activity_media_percentage" class="pull-right font-bold">0%
+                        <div id="activity_media_percentage" class="pull-right font-bold">{{daily_activity['likes'][1]}}
                             <i id="aposstatuschange" class="text-color"></i>
                         </div>
                     </div>
@@ -172,6 +182,24 @@
                     <a class="showhide"><i class="fa fa-chevron-up"></i></a>
                     <a class="closebox"><i class="fa fa-times"></i></a>
                 </div>
+                Media likes in the past 14 days
+            </div>
+            <div class="panel-body">
+                <div class="flot-chart">
+                    <div class="flot-chart-content" id="medialikeschart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class = "row">
+    <div class="col-lg-12">
+        <div class="hpanel">
+            <div class="panel-heading">
+                <div class="panel-tools">
+                    <a class="showhide"><i class="fa fa-chevron-up"></i></a>
+                    <a class="closebox"><i class="fa fa-times"></i></a>
+                </div>
                 Followers vs Average likes in the past 14 days
             </div>
             <div class="panel-body">
@@ -184,6 +212,63 @@
 </div>
 
 <script type="text/javascript">
+    var media_likesrawdata = []
+    var arr = []
+    {% for x in media_likes_raw_data %}
+      media_likesrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
+      arr.push({{x[1]}});
+    {% endfor %}
+    var arrmax = Math.max.apply(null, arr) ;
+    var arrmin = Math.min.apply(null, arr) ;
+    var arrticks = Math.round((arrmax - arrmin)/10);
+    console.log(media_likesrawdata);
+    var media_likesdata = [
+        {
+            label: "line",
+            data: media_likesrawdata
+        }
+    ];
+
+    var media_likesChartOptions = {
+        series: {
+            lines: {
+                show: true,
+                lineWidth: 1,
+                fill: true,
+                fillColor: {
+                    colors: [ { opacity: 0.5 }, { opacity: 0.5 }
+                    ]
+                }
+            }
+        },
+        xaxis: {
+            mode: "time",
+            timeformat:"%y-%m-%d",
+            tickSize: [1, 'day']
+        },
+        yaxis: {
+            min: arrmin - arrticks,
+            max: arrmax + arrticks,
+            tickSize: arrticks
+        },
+        colors: ["#62cb31"],
+        grid: {
+            tickColor: "#e4e5e7",
+            borderWidth: 1,
+            borderColor: '#e4e5e7',
+            color: '#6a6c6f'
+        },
+        legend: {
+            show: false
+        },
+        tooltip: true,
+        tooltipOpts: {
+            content: "x: %x, y: %y"
+        }
+    };
+    $.plot($("#medialikeschart"), media_likesdata, media_likesChartOptions);
+
+
     var followersrawdata = []
     var arr = []
     {% for x in followers_raw_data %}
@@ -359,8 +444,8 @@ $("#activitytoday").on('click', function(e){
     {% else %}
     $("#aposstatuschange").addClass("fa level-down");
     {% endif %}
-
 });
+
 $("#activitymonth").on('click', function(e){
     e.preventDefault();
     $("#activity_followers_cnt").text("{{monthly_activity['followers'][0]}}");

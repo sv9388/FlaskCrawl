@@ -68,7 +68,7 @@ def logout():
   session.clear()
   return render_template('login.html')
 
-@app.route("/ig/<string:handle>")
+@app.route("/ig/<string:handle>", methods = ["GET", "POST"])
 @login_required
 def instaboard(handle, user=None):
   print(user)
@@ -104,6 +104,8 @@ def instaboard(handle, user=None):
   start_date = datetime.datetime.today()-datetime.timedelta(days=15+7)
   end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
   iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
+  if request.method == "POST":
+      print("At post now!")
 
   db_date = lambda dt : dt.strftime('%Y/%m/%d')
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15)) ]

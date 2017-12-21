@@ -58,7 +58,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(130))
     username = db.Column(db.String(), nullable = False)
     start_date = db.Column(db.DateTime, default = datetime.datetime.utcnow)
-    max_insta_accounts = db.Column(db.Integer, default = 10, nullable = False)
+    max_insta_accounts = db.Column(db.Integer, default = 3, nullable = False)
     profile_pic = db.Column(db.String(255), nullable = False, default = "dummy_profile_pic.jpg")
     roles = db.relationship(
         'Role',
