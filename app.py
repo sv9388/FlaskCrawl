@@ -73,6 +73,7 @@ def logout():
 def instaboard(handle, user=None):
   print(user)
   print(handle)
+  detail_str = "the past 14 days" if request.method == "GET" else " between %s and %s" % (request.form['startdate'].strftime("%m/%d/%Y"), request.form['enddate'].strftime("%m/%d/%Y"))
   accounts = [x.instagram_id for x in user.iprofiles]
   if handle not in accounts:
     session.clear()
@@ -84,7 +85,7 @@ def instaboard(handle, user=None):
 
   if iprofile_today is None or iprofile_yestr is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-            profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), \
+            profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
             dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
             following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
             engagement_rate_raw_data = [], media_likes_mv_avg = [], \
@@ -124,7 +125,7 @@ def instaboard(handle, user=None):
   print(followers_raw_data)
   print(engagement_rate_raw_data)
   return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-                        profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), \
+                        profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str,  \
                         dashboard_summary = dashboard_summary, \
                         following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
                         engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
