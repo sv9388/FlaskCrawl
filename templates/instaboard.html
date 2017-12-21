@@ -1,11 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class = "row">
-    <form method="post" action="{% url_for('instaboard', handle = handle)%}" id="dateiboardform">
+    <form method="post" action="{{ url_for('instaboard', handle = handle) }}" id="dateiboardform">
         <div class="input-daterange input-group" id="datepicker">
-            <input type="text" class="input-sm form-control" name="start"/>
+            <input type="text" class="input-sm form-control" name="startdate"/>
             <span class="input-group-addon">to</span>
-            <input type="text" class="input-sm form-control" name="end"/>
+            <input type="text" class="input-sm form-control" name="enddate"/>
         </div>
     </form>
 </div>
