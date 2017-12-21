@@ -104,8 +104,9 @@ def instaboard(handle, user=None):
   start_date = datetime.datetime.today()-datetime.timedelta(days=15)
   end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
   if request.method == "POST":
-    start_date = datetime.datetime.strptime(request.form['startdate'], "mm/dd/yyyy")
-    end_date = datetime.datetime.strptime(request.form['enddate'], "mm/dd/yyyy")
+    print(request.form['startdate'])
+    start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
+    end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
     print(start_date)
     print(end_date)
   iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
