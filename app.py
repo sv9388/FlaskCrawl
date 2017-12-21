@@ -84,15 +84,15 @@ def instaboard(handle, user=None):
 
   if iprofile_today is None or iprofile_yestr is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-                        profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), \
-                        dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
-                        following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
-                        engagement_rate_raw_data = [], media_likes_mv_avg = [], \
-                        daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
-                        monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
-                        followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
-                        engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
-                        msg = "Nothing here yet! Check back in 2 days." if iprofile_today is None else "Only today's data is available. Check back tomorrow for userful content.")
+            profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), \
+            dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
+            following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
+            engagement_rate_raw_data = [], media_likes_mv_avg = [], \
+            daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
+            monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
+            followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
+            engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
+            msg = "Nothing here yet! Check back in 2 days." if iprofile_today is None else "Only today's data is available. Check back tomorrow for userful content.")
 
   daily_activity, monthly_activity = get_activity(handle)
 
@@ -105,7 +105,10 @@ def instaboard(handle, user=None):
   end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
   iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
   if request.method == "POST":
-      print("At post now!")
+    start_date = request.form['startdate']
+    end_date = request.form['enddate']
+    print(start_date)
+    print(end_date)
 
   db_date = lambda dt : dt.strftime('%Y/%m/%d')
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15)) ]
