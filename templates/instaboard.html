@@ -501,5 +501,18 @@ $today = new Date();
 $yesterday = new Date($today);
 $yesterday.setDate($today.getDate() - 1);
 $(".dashboarddateinfo").text(formatDate($yesterday));
+
+
+
+$('#datepicker').datepicker();
+$("#datepicker").on("changeDate", function(event) {
+    $("#my_hidden_input").val(
+            $("#datepicker").datepicker('getFormattedDate')
+    )
+});
+
+$('.input-group.date').datepicker({ });
+$('.input-daterange').datepicker({ });
+
 </script>
 {% endblock %}

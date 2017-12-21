@@ -67,18 +67,6 @@
 </script>
 
 <script>
-$('#datepicker').datepicker();
-$("#datepicker").on("changeDate", function(event) {
-    $("#my_hidden_input").val(
-            $("#datepicker").datepicker('getFormattedDate')
-    )
-});
-
-$('#datapicker2').datepicker();
-$('.input-group.date').datepicker({ });
-$('.input-daterange').datepicker({ });
-
-
 $.fn.editable.defaults.mode = 'inline';
 $.fn.editable.defaults.showbuttons = false;
 
