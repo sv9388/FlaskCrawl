@@ -32,11 +32,6 @@
         <div class="small-logo">
             <span class="text-primary">HOMER APP</span>
         </div>
-        <form role="search" class="navbar-form-custom" method="post" action="#">
-            <div class="form-group">
-                <input type="text" placeholder="Search something special" class="form-control" name="search">
-            </div>
-        </form>
         <div class="mobile-menu">
             <button type="button" class="navbar-toggle mobile-menu-toggle" data-toggle="collapse" data-target="#mobile-collapse">
                 <i class="fa fa-chevron-down"></i>
@@ -57,6 +52,38 @@
         </div>
         <div class="navbar-right">
             <ul class="nav navbar-nav no-borders">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" href="#" data-toggle="dropdown">
+                        <i class="pe-7s-speaker"></i>
+                    </a>
+                    <ul class="dropdown-menu hdropdown notification animated flipInX">
+                        <li>
+                            <a href="#">
+                                <span class="label label-success">TRENDING </span> Hashtag Research
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="label label-default"> NEW </span> Follow Source Research
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="label label-primary"> MOST USED </span> Boost Your Engagement
+                            </a>
+                        </li>
+                         <li>
+                            <a href="#">
+                                <span class="label label-info"> TRENDING </span> Buy Grown IG Accounts
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="label label-warning"> NEW </span> Grow Your Instagram Account
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <li class="dropdown">
                     <a href="/logout">
                         <i class="pe-7s-upload pe-rotate-90"></i>
@@ -100,6 +127,9 @@
                <a href="/admin"> <span class="nav-label">Admin</span></a>
             </li>
             {% endif %}
+            <li class>
+                <a href="/upgrade"> <span class="nav-label">Upgrade</span></a>
+            </li>
         </ul>
     </div>
 </aside>

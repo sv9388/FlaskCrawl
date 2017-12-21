@@ -64,14 +64,14 @@
 <br/>
 <div class = "row">
     <form method="post" action="{{ url_for('instaboard', handle = handle) }}" id="dateiboardform">
-        <div class="col-lg-9">
+        <div class="col-lg-10">
             <div class="input-daterange input-group" id="datepicker">
                 <input type="text" class="input-sm form-control" name="startdate"/>
                 <span class="input-group-addon">to</span>
                 <input type="text" class="input-sm form-control" name="enddate"/>
             </div>
         </div>
-        <div class="col-lg-3"><button class="btn btn-success">Retrieve Stats</button></div>
+        <div class="col-lg-2"><button class="btn btn-success">Retrieve Stats</button></div>
     </form>
 </div>
 <br/>

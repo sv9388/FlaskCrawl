@@ -231,6 +231,11 @@ def register():
     db.session.commit()
     return render_template('register.html', msg = "Registration complete. Login to the app to access features")
 
+@app.route('/upgrade')
+@login_required
+def upgrade(user = None):
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic)
+
 @app.route('/user', methods = ['GET', 'POST'])
 @login_required
 def app_user(user = None):
