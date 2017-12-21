@@ -1,16 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class = "row">
-    <form method="post" action="{{ url_for('instaboard', handle = handle) }}" id="dateiboardform">
-        <div class="input-daterange input-group" id="datepicker">
-            <input type="text" class="input-sm form-control" name="startdate"/>
-            <span class="input-group-addon">to</span>
-            <input type="text" class="input-sm form-control" name="enddate"/>
-        </div>
-    </form>
-</div>
-
-<div class = "row">
 {% for x in dashboard_summary %}
     <div class="col-md-3">
         <div class="hpanel {{loop.cycle('hbggreen', 'hbgblue', 'hbgyellow', 'hbgred')}}">
@@ -71,6 +61,17 @@
         </div>
     </div>
 </div>
+<br/>
+<div class = "row">
+    <form method="post" action="{{ url_for('instaboard', handle = handle) }}" id="dateiboardform">
+        <div class="input-daterange input-group" id="datepicker">
+            <input type="text" class="input-sm form-control" name="startdate"/>
+            <span class="input-group-addon">to</span>
+            <input type="text" class="input-sm form-control" name="enddate"/>
+        </div>
+    </form>
+</div>
+<br/>
 <div class = "row">
     <div class="col-lg-9">
         <div class="hpanel">
