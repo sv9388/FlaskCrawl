@@ -73,7 +73,7 @@ def logout():
 def instaboard(handle, user=None):
   print(user)
   print(handle)
-  detail_str = "the past 14 days" if request.method == "GET" else " between %s and %s" % (request.form['startdate'].strftime("%m/%d/%Y"), request.form['enddate'].strftime("%m/%d/%Y"))
+  detail_str = "the past 14 days" if request.method == "GET" else " between %s and %s" % (request.form['startdate'], request.form['enddate'])
   accounts = [x.instagram_id for x in user.iprofiles]
   if handle not in accounts:
     session.clear()
