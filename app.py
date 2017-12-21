@@ -101,21 +101,24 @@ def instaboard(handle, user=None):
                        'Post Change' : iprofile_today.media_likes -  (iprofile_yestr.media_likes if iprofile_yestr else 0),
                        'Engagement Rate Change' : "{:3.1f} %".format((iprofile_today.engagement_rate - (iprofile_yestr.engagement_rate if iprofile_yestr else 0))*100)}
 
-  start_date = datetime.datetime.today()-datetime.timedelta(days=15+7)
+  start_date = datetime.datetime.today()-datetime.timedelta(days=15)
   end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
-  iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
   if request.method == "POST":
-    start_date = request.form['startdate']
-    end_date = request.form['enddate']
+    start_date = datetime.datetime.strptime(request.form['startdate'], "mm/dd/yyyy")
+    end_date = datetime.datetime.strptime(request.form['enddate'], "mm/dd/yyyy")
     print(start_date)
     print(end_date)
+  iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
 
   db_date = lambda dt : dt.strftime('%Y/%m/%d')
-  following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15)) ]
-  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
-  engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
-  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles for x in iprofiles if x.date >= (datetime.datetime.today()-datetime.timedelta(days=15))]
-  media_likes_mv_avg = get_likes_moving_average(iprofiles)
+  following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
+  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles]
+  engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles]
+  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles for x in iprofiles]
+
+  start_date = start_date - datetime.timedelta(days = 7)
+  mvprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
+  media_likes_mv_avg = get_likes_moving_average(mvprofiles)
 
   print(followers_raw_data)
   print(engagement_rate_raw_data)
