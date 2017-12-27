@@ -287,6 +287,7 @@
         },
         colors: ["#62cb31"],
         grid: {
+            hoverable: true,
             tickColor: "#e4e5e7",
             borderWidth: 1,
             borderColor: '#e4e5e7',
@@ -295,9 +296,13 @@
         legend: {
             show: false
         },
-        tooltip: true,
-        tooltipOpts: {
-            content: "x: %x, y: %y"
+        tooltip: {
+            show: true,
+            content: '%y',
+            shifts: {
+                x: -60,
+                y: 25
+            }
         }
     };
     $.plot($("#medialikeschart"), media_likesdata, media_likesChartOptions);
@@ -344,6 +349,7 @@
         },
         colors: ["#62cb31"],
         grid: {
+            hoverable: true,
             tickColor: "#e4e5e7",
             borderWidth: 1,
             borderColor: '#e4e5e7',
@@ -352,9 +358,13 @@
         legend: {
             show: false
         },
-        tooltip: true,
-        tooltipOpts: {
-            content: "x: %x, y: %y"
+        tooltip: {
+            show: true,
+            content: '%y',
+            shifts: {
+                x: -60,
+                y: 25
+            }
         }
     };
     $.plot($("#followerschart"), followersdata, followersChartOptions);
@@ -390,6 +400,7 @@
         },
         colors: ["#62cb31"],
         grid: {
+            hoverable: true,
             tickColor: "#e4e5e7",
             borderWidth: 1,
             borderColor: '#e4e5e7',
@@ -398,9 +409,13 @@
         legend: {
             show: false
         },
-        tooltip: true,
-        tooltipOpts: {
-            content: "x: %x, y: %y"
+        tooltip: {
+            show: true,
+            content: '%y',
+            shifts: {
+                x: -60,
+                y: 25
+            }
         }
     };
     $.plot($("#engagementchart"), engagementdata, engagementChartOptions);
@@ -429,6 +444,7 @@
 				} ],
         colors: ["#62cb31", "#0000ff"],
         grid: {
+            hoverable: true,
             tickColor: "#e4e5e7",
             borderWidth: 1,
             borderColor: '#e4e5e7',
