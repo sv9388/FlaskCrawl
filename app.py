@@ -116,7 +116,7 @@ def instaboard(handle, user=None):
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
   followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles]
   engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles]
-  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles for x in iprofiles]
+  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles]
 
   start_date = start_date - datetime.timedelta(days = 7)
   mvprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
