@@ -234,7 +234,7 @@
     ];
 
     var media_likesChartOptions = {
-        series: {
+        /*series: {
             lines: {
                 show: true,
                 lineWidth: 1,
@@ -254,6 +254,36 @@
             min: arrmin - arrticks,
             max: arrmax + arrticks,
             tickSize: arrticks
+        },
+        colors: ["#62cb31"],
+        grid: {
+            tickColor: "#e4e5e7",
+            borderWidth: 1,
+            borderColor: '#e4e5e7',
+            color: '#6a6c6f'
+        },
+        legend: {
+            show: false
+        },
+        tooltip: true,
+        tooltipOpts: {
+            content: "x: %x, y: %y"
+        }*/
+         series: {
+            lines: {
+                show: true,
+                lineWidth: 1,
+                fill: true,
+                fillColor: {
+                    colors: [ { opacity: 0.5 }, { opacity: 0.5 }
+                    ]
+                }
+            }
+        },
+        xaxis: {
+            mode: "time",
+            timeformat:"%y-%m-%d",
+            tickSize: [1, 'day']
         },
         colors: ["#62cb31"],
         grid: {
