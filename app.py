@@ -18,8 +18,6 @@ def csrf_protect():
     if request.method == "POST":
         print(session)
         token = session.pop('_csrf_token', None)
-        if token:
-            token =  token.decode()
         gottoken = request.form['_csrf_token']
         print(token)
         print(gottoken)
@@ -32,7 +30,7 @@ def csrf_protect():
 
 def generate_csrf_token():
     if '_csrf_token' not in session:
-        session['_csrf_token'] = binascii.hexlify(os.urandom(24))
+        session['_csrf_token'] = binascii.hexlify(os.urandom(24)).decode()
     return session['_csrf_token']
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
