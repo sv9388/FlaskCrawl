@@ -18,6 +18,8 @@ def csrf_protect():
     if request.method == "POST":
         print(session)
         token = session.pop('_csrf_token', None)
+        if token:
+            token =  token.decode()
         gottoken = request.form['_csrf_token']
         print(token)
         print(gottoken)
