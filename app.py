@@ -1,4 +1,4 @@
-from flask import session, url_for, Flask, request, redirect, render_template
+from flask import session, url_for, Flask, request, redirect, render_template, abort
 from flask_sqlalchemy import SQLAlchemy
 import datetime, requests, json, binascii, os
 
@@ -13,7 +13,7 @@ DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 def csrf_protect():
     if request.method == "POST":
         token = session.pop('_csrf_token', None)
-        if not token or token != request.form.get('_csrf_token'):
+        if not token or token != request.form['_csrf_token']:
             abort(403)
 
 def generate_csrf_token():
