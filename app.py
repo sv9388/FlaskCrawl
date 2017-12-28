@@ -1,6 +1,6 @@
 from flask import session, url_for, Flask, request, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
-import datetime, requests, json
+import datetime, requests, json, binascii, os
 
 app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
@@ -18,7 +18,7 @@ def csrf_protect():
 
 def generate_csrf_token():
     if '_csrf_token' not in session:
-        session['_csrf_token'] = some_random_string()
+        session['_csrf_token'] = binascii.hexlify(os.urandom(n)) 
     return session['_csrf_token']
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
