@@ -6,6 +6,7 @@ app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
 db = SQLAlchemy(app)
 
+default_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"}
 token_id = "access_token"
 DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 
@@ -16,16 +17,10 @@ def err400(e):
 @app.before_request
 def csrf_protect():
     if request.method == "POST":
-        print(session)
         token = session.pop('_csrf_token', None)
-        gottoken = request.form['_csrf_token']
-
-        print(token)
-        print(gottoken)
         print(type(token))
+        gottoken = request.form['_csrf_token']
         print(type(gottoken))
-        print(not token)
-        print(not token == gottoken)
         if not token or not token == gottoken:
             abort(400)
 
@@ -65,6 +60,15 @@ def get_likes_moving_average(iprofiles):
   if len(media_likes_mv_avg)>=14:
       media_likes_mv_avg = media_likes_mv_avg[-14:]
   return media_likes_mv_avg
+
+def get_summary(startp, endp):
+    if not endp:
+        return default_summary
+    return {'Follower Change' : endp.followers_count - (startp.followers_count if startp else 0),
+                       'Following Change' : endp.following_count -  (startp.following_count if startp else 0),
+                       'Post Change' : endp.media_likes -  (startp.media_likes if startp else 0),
+                       'Engagement Rate Change' : "{:3.1f} %".format((endp.engagement_rate - (startp.engagement_rate if startp else 0))*100)}
+
 
 diffact = lambda s, e : [e, "{:.2f} %".format((s-e)*100./s if s > 0 else 0.0), 0] if s>e else [e, "{:.2f} %".format((e-s)*100./e if e > 0 else 0.0), 1]
 def get_activity(handle):
@@ -113,7 +117,7 @@ def instaboard(handle, user=None):
   if iprofile_today is None or iprofile_yestr is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
             profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
-            dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
+            dashboard_summary = default_summary,\
             following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
             engagement_rate_raw_data = [], media_likes_mv_avg = [], \
             daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
@@ -124,15 +128,32 @@ def instaboard(handle, user=None):
 
   daily_activity, monthly_activity = get_activity(handle)
 
-  dashboard_summary = {'Follower Change' : iprofile_today.followers_count - (iprofile_yestr.followers_count if iprofile_yestr else 0),
-                       'Following Change' : iprofile_today.following_count -  (iprofile_yestr.following_count if iprofile_yestr else 0),
-                       'Post Change' : iprofile_today.media_likes -  (iprofile_yestr.media_likes if iprofile_yestr else 0),
-                       'Engagement Rate Change' : "{:3.1f} %".format((iprofile_today.engagement_rate - (iprofile_yestr.engagement_rate if iprofile_yestr else 0))*100)}
+  dashboard_summary = {}
+  if request.method == "GET":
+    iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
+    iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
+    dashboard_summary = get_summary(iprofile_yestr,  iprofile_today)
+  elif request.method == "POST":
+    start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
+    end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
+    iprofile_start = iprofileq.filter_by(date = DB_DATE_FS.format(start_date)).first()
+    iprofile_end = iprofileq.filter_by(date = DB_DATE_FS.format(end_date)).first()
+    dashboard_summary = get_summary(iprofile_start, iprofile_end)
+  else:
+    return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
+            profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
+            dashboard_summary = default_summary,\
+            following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
+            engagement_rate_raw_data = [], media_likes_mv_avg = [], \
+            daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
+            monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
+            followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
+            engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
+            msg = "Unsupported method.")
 
   start_date = datetime.datetime.today()-datetime.timedelta(days=15)
   end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
   if request.method == "POST":
-    print(request.form['startdate'])
     start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
     end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
     print(start_date)
