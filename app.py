@@ -9,6 +9,10 @@ db = SQLAlchemy(app)
 token_id = "access_token"
 DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 
+@app.errorhandler(400)
+def err400():
+    return render_template('login.html', msg = "You have submitted an erroneous request. Flush cookies and retry. If the problem persists, contact admin!")
+
 @app.before_request
 def csrf_protect():
     if request.method == "POST":
@@ -16,12 +20,12 @@ def csrf_protect():
         token = session.pop('_csrf_token', None)
         print(token)
         print(request.form['_csrf_token'])
-        if not token or token != request.form['_csrf_token']:
-            abort(403)
+        if not token or not token == request.form['_csrf_token']:
+            abort(400)
 
 def generate_csrf_token():
     if '_csrf_token' not in session:
-        session['_csrf_token'] = binascii.hexlify(os.urandom(24)) 
+        session['_csrf_token'] = binascii.hexlify(os.urandom(24))
     return session['_csrf_token']
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
