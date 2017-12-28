@@ -19,8 +19,6 @@ def csrf_protect():
         print(session)
         token = session.pop('_csrf_token', None)
         gottoken = request.form['_csrf_token']
-        if gottoken:
-            gottoken = gottoken.encode()
 
         print(token)
         print(gottoken)
