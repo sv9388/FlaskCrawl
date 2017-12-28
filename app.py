@@ -25,7 +25,7 @@ def csrf_protect():
         print(type(gottoken))
         print(not token)
         print(not token == gottoken)
-        if not token or not token.decode() == gottoken:
+        if not token or not token == gottoken:
             abort(400)
 
 def generate_csrf_token():
