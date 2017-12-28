@@ -25,12 +25,12 @@ def csrf_protect():
         print(type(gottoken))
         print(not token)
         print(not token == gottoken)
-        if not token or not token == gottoken:
+        if not token or not token.decode() == gottoken:
             abort(400)
 
 def generate_csrf_token():
     if '_csrf_token' not in session:
-        session['_csrf_token'] = binascii.hexlify(os.urandom(24)).decode()
+        session['_csrf_token'] = binascii.hexlify(os.urandom(24))
     return session['_csrf_token']
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
