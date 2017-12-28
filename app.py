@@ -10,7 +10,7 @@ token_id = "access_token"
 DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 
 @app.errorhandler(400)
-def err400():
+def err400(e):
     return render_template('login.html', msg = "You have submitted an erroneous request. Flush cookies and retry. If the problem persists, contact admin!")
 
 @app.before_request
@@ -20,6 +20,8 @@ def csrf_protect():
         token = session.pop('_csrf_token', None)
         print(token)
         print(request.form['_csrf_token'])
+        print(not token)
+        print(not token == request.form['_csrf_token'])
         if not token or not token == request.form['_csrf_token']:
             abort(400)
 
@@ -102,9 +104,9 @@ def instaboard(handle, user=None):
 
   iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
   iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-  #iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
+  iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
 
-  if iprofile_today is None: # or iprofile_yestr is None:
+  if iprofile_today is None or iprofile_yestr is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
             profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
             dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
