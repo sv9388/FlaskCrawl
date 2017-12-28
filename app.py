@@ -21,6 +21,8 @@ def csrf_protect():
         gottoken = request.form['_csrf_token']
         print(token)
         print(gottoken)
+        print(type(token))
+        print(type(gottoken))
         print(not token)
         print(not token == gottoken)
         if not token or not token == gottoken:
