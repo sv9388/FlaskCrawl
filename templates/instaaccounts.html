@@ -27,6 +27,7 @@
             </div>
             <div class="panel-body">
                 <form id = "insta_account_groups" method = "post" action="{{url_for('instaaccounts')}}">
+                  <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
                   <input name = "accounts" type="text" value="{{accounts|join(',')}}" data-role="tagsinput" />
                   <br/><br/>
                   <input type = "submit" class = "btn w-xs btn-success" value = "Save" />

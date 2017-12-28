@@ -64,6 +64,7 @@
 <br/>
 <div class = "row">
     <form method="post" action="{{ url_for('instaboard', handle = handle) }}" id="dateiboardform">
+        <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
         <div class="col-lg-10">
             <div class="input-daterange input-group" id="datepicker">
                 <input type="text" class="input-sm form-control" name="startdate"/>

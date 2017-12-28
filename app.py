@@ -9,6 +9,20 @@ db = SQLAlchemy(app)
 token_id = "access_token"
 DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 
+@app.before_request
+def csrf_protect():
+    if request.method == "POST":
+        token = session.pop('_csrf_token', None)
+        if not token or token != request.form.get('_csrf_token'):
+            abort(403)
+
+def generate_csrf_token():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = some_random_string()
+    return session['_csrf_token']
+
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
 from models import User, Role, Iprofile, IprofileData
 from functools import wraps
 def login_required(f):

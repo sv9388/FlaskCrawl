@@ -19,6 +19,7 @@
             <div class="hpanel">
                 <div class="panel-body">
                         <form action="/login" method = "post" id="loginForm">
+                            <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
                             <div class="form-group">
                                 <label class="control-label" for="email">Your Email:</label>
                                 <input type="text" placeholder="example@gmail.com" title="Please enter you email" required="" value="" name="email" id="email" class="form-control">
