@@ -12,6 +12,7 @@ DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 @app.before_request
 def csrf_protect():
     if request.method == "POST":
+        print(session)
         token = session.pop('_csrf_token', None)
         if not token or token != request.form['_csrf_token']:
             abort(403)
