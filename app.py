@@ -112,12 +112,12 @@ def instaboard(handle, user=None):
 
   iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
   iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-  iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
-
-  if iprofile_today is None or iprofile_yestr is None:
+  #iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
+  summary_start_date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))
+  if iprofile_today is None: # or iprofile_yestr is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
             profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
-            dashboard_summary = default_summary,\
+            dashboard_summary = default_summary, summary_start_date = summary_start_date, \
             following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
             engagement_rate_raw_data = [], media_likes_mv_avg = [], \
             daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
@@ -129,6 +129,7 @@ def instaboard(handle, user=None):
   daily_activity, monthly_activity = get_activity(handle)
 
   dashboard_summary = {}
+  summary_start_date = summary_start_date
   if request.method == "GET":
     iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
     iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
@@ -139,10 +140,11 @@ def instaboard(handle, user=None):
     iprofile_start = iprofileq.filter_by(date = DB_DATE_FS.format(start_date)).first()
     iprofile_end = iprofileq.filter_by(date = DB_DATE_FS.format(end_date)).first()
     dashboard_summary = get_summary(iprofile_start, iprofile_end)
+    summary_start_date = DB_DATE_FS.format(start_date)
   else:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
             profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
-            dashboard_summary = default_summary,\
+            dashboard_summary = default_summary, summary_start_date = summary_start_date,\
             following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
             engagement_rate_raw_data = [], media_likes_mv_avg = [], \
             daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
@@ -174,7 +176,7 @@ def instaboard(handle, user=None):
   print(engagement_rate_raw_data)
   return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
                         profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str,  \
-                        dashboard_summary = dashboard_summary, \
+                        dashboard_summary = dashboard_summary, summary_start_date = summary_start_date,\
                         following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
                         engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
                         monthly_activity = monthly_activity, followers_today = iprofile_today.followers_count, engagement_today = iprofile_today.engagement_rate)

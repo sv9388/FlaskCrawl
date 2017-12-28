@@ -108,7 +108,7 @@
                     <a id="activitymonth" class="btn btn-xs btn-default">Month</a>
                 </div>
                 <div class="panel-title">Summary Of Your Stats:</div>
-                
+
                 <div class="list-item-container">
                     <div class="list-item">
                         <h3 id="activity_followers_cnt" class="no-margins font-extra-bold text-success">{{daily_activity['followers'][0]}}</h3>
@@ -166,14 +166,14 @@
             <div class="panel-body">
                 <div class="text-center">
                     <h2 class="m-b-xs">What Is Engagement Rate?</h2>
-                    
+
                     <div class="m">
                         <i class="pe-7s-science fa-5x"></i>
                     </div>
                     <p class="small">
-                        Engagement Rate is calculated by taking the average number of likes and comments from your last 10 posts (exluding the most recent one) and dividing it by the total followers of the account. 
+                        Engagement Rate is calculated by taking the average number of likes and comments from your last 10 posts (exluding the most recent one) and dividing it by the total followers of the account.
                     </p>
-                    
+
                 </div>
             </div>
         </div>
@@ -525,9 +525,7 @@ function formatDate(date) {
   return day + ' ' + monthNames[monthIndex] + ' ' + year;
 }
 
-$today = new Date();
-$yesterday = new Date($today);
-$yesterday.setDate($today.getDate() - 1);
+$yesterday = new Date("{{summary_start_date}}");
 $(".dashboarddateinfo").text(formatDate($yesterday));
 
 
