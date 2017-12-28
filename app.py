@@ -102,9 +102,9 @@ def instaboard(handle, user=None):
 
   iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
   iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-  iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
+  #iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
 
-  if iprofile_today is None or iprofile_yestr is None:
+  if iprofile_today is None: # or iprofile_yestr is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
             profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
             dashboard_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"},\
