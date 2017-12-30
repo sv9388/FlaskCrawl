@@ -16,6 +16,7 @@ class InstacrawlPipeline(object):
             c.execute(stmt)
             self.conn.commit()
         except:
+            self.conn.rollback()
             raise
         finally:
             c.close()
