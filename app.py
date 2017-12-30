@@ -1,6 +1,6 @@
 from flask import session, url_for, Flask, request, redirect, render_template, abort
 from flask_sqlalchemy import SQLAlchemy
-import datetime, requests, json, binascii, os
+import datetime, requests, json, binascii, os, re
 
 app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
@@ -112,9 +112,8 @@ def instaboard(handle, user=None):
 
   iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
   iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-  #iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
   summary_start_date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))
-  if iprofile_today is None: # or iprofile_yestr is None:
+  if iprofile_today is None:
     return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
             profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
             dashboard_summary = default_summary, summary_start_date = summary_start_date, \
@@ -191,16 +190,21 @@ def instaaccounts(user = None):
   if request.method == "POST":
     updated_accounts = request.form['accounts']
     updated_accounts = list(set(updated_accounts.split(',')))
-    if len(updated_accounts) > user.max_insta_accounts:
-        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), profile_pic = user.profile_pic, account_limit = user.max_insta_accounts, msg = "You cannot monitor more than %d accounts"%user.max_insta_accounts)
+    correct_accounts = [x.lower() for x in updated_accounts if re.match("^[a-zA-Z0-9_\.]*$", x)]
+    incorrect_accounts = list(set(updated_accounts) - set(correct_accounts))
+    if len(updated_accounts) != len(correct_accounts):
+        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), profile_pic = user.profile_pic, \
+        account_limit = user.max_insta_accounts, msg = "Instagram handles can contain alphanumeric character, _ and . The following accounts don't meet that criteria: " + ", ".join(incorrect_accounts))
+    if len(correct_accounts) > user.max_insta_accounts:
+        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), profile_pic = user.profile_pic, \
+        account_limit = user.max_insta_accounts, msg = "You cannot monitor more than %d accounts"%user.max_insta_accounts)
 
     delete_accounts = user.iprofiles
     for x in delete_accounts:
         user.iprofiles.remove(x)
 
-    #new_accounts = get_insta_accounts_by_handles(updated_accounts)
     profiles = []
-    for x in updated_accounts:
+    for x in correct_accounts:
         prof = Iprofile.query.filter_by(instagram_id = x).first()
         if not prof:
             prof = Iprofile()
@@ -213,6 +217,9 @@ def instaaccounts(user = None):
     db.session.commit()
     print(','.join([x.instagram_id for x in user.iprofiles]))
     return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, account_limit = user.max_insta_accounts, msg = "Updated the account handles you are monitoring. Come back tomorrow for some interesting info!")
+
+  session.clear()
+  return render_template('login.html', msg = "Not allowed to do perform this action.")
 
 @app.route("/admin")
 @login_required
