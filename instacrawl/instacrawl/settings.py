@@ -5,6 +5,7 @@ BOT_NAME = 'instacrawl'
 SPIDER_MODULES = ['instacrawl.spiders']
 NEWSPIDER_MODULE = 'instacrawl.spiders'
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
 # Proxy
 RETRY_TIMES = 10
 RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]

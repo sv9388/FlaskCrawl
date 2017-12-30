@@ -124,7 +124,7 @@ def instaboard(handle, user=None):
             monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
             followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
             engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
-            msg = "Nothing here yet! Check back in 2 days." if iprofile_today is None else "Only today's data is available. Check back tomorrow for userful content.")
+            msg = "Nothing here yet! Check back in 2 days.")
 
   daily_activity, monthly_activity = get_activity(handle)
 
