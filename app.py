@@ -168,7 +168,7 @@ def instaboard(handle, user=None):
   media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles]
 
   start_date = start_date - datetime.timedelta(days = 7)
-  mvprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date))..order_by(IprofileData.date).all()
+  mvprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).order_by(IprofileData.date).all()
   media_likes_mv_avg = get_likes_moving_average(mvprofiles)
 
   print(followers_raw_data)
