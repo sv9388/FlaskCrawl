@@ -159,7 +159,7 @@ def instaboard(handle, user=None):
     end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
     print(start_date)
     print(end_date)
-  iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).all()
+  iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).order_by(IprofileData.date).all()
 
   db_date = lambda dt : dt.strftime('%Y/%m/%d')
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
