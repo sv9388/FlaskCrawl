@@ -37,7 +37,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if token_id not in session or session[token_id] is None or User.verify_auth_token(session[token_id]) is None:
-            return redirect(url_for('login', next=request.url))
+            return redirect(url_for('login', next=request.url)) #TODO: render template login.
         user = User.verify_auth_token(session[token_id])
         return f(*args, user = user, **kwargs)
     return decorated_function
@@ -181,6 +181,7 @@ def instaboard(handle, user=None):
                         monthly_activity = monthly_activity, followers_today = iprofile_today.followers_count, engagement_today = iprofile_today.engagement_rate)
 
 @app.route("/instaaccounts", methods = ["GET", "POST"])
+@app.route("/")
 @login_required
 def instaaccounts(user = None):
   existing_accounts = [x.instagram_id for x in user.iprofiles]
@@ -230,26 +231,23 @@ def admin(user = None):
     all_users = User.query.all()
     return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, all_users = all_users)
 
-@app.route("/admin/<int:id>/max_accounts", methods = ["POST", "PUT"])
+@app.route("/admin/<int:id>/max_accounts", methods = ["POST"])
 @login_required
 def max_acc_edit(id, user = None):
     print(request.method)
     print(request.form)
+    print(user)
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
         return render_template('login.html', msg = "Not allowed to do perform this action.")
     eduser = User.query.filter_by(id = id).first()
     eduser.max_insta_accounts = int(request.form['value'])
+    print(eduser)
     db.session.add(eduser)
     db.session.commit()
 
     all_users = User.query.all()
     return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, all_users = all_users)
-
-@app.route("/")
-@login_required
-def index(user = None):
-    return redirect(url_for('instaaccounts', user = user))
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
