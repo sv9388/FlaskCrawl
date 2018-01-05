@@ -235,7 +235,7 @@ def admin(user = None):
 @login_required
 def max_acc_edit(id, user = None):
     print(request.method)
-    print(request.form)
+    print(request.json)
     print(user)
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
