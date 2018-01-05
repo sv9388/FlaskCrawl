@@ -37,7 +37,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if token_id not in session or session[token_id] is None or User.verify_auth_token(session[token_id]) is None:
-            return redirect(url_for('login', next=request.url)) #TODO: render template login.
+            return render_template('login.html')#redirect(url_for('login', next=request.url)) #TODO: render template login.
         user = User.verify_auth_token(session[token_id])
         return f(*args, user = user, **kwargs)
     return decorated_function
