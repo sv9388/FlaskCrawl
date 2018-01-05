@@ -9,7 +9,7 @@ db = SQLAlchemy(app)
 default_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"}
 token_id = "access_token"
 DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
-SERVER_NAME = "https://analytics.socialmedia.com/"
+SERVER_NAME = "analytics.socialmedia.com"
 
 @app.errorhandler(400)
 def err400(e):
