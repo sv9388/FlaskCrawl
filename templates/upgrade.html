@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 {% block content %}
-<section id="pricing" class="bg-light">
     <div class="container">
         <div class="row text-center">
             <div class="col-lg-12">
@@ -10,7 +9,7 @@
         </div>
         <div class="row m-t-lg">
             {% for plan in tiers[:3] %}
-            <div class="col-lg-3">
+            <div class="col-lg-3 panel">
                 <ul class="pricing-plan list-unstyled">
                     <li class="pricing-title">
                       Up To <u>{{plan.max_accounts}}</u> Accounts
@@ -51,7 +50,7 @@
         </div>
         <div class="row m-t-lg">
             {% for plan in tiers[3:] %}
-            <div class="col-lg-3">
+            <div class="col-lg-3 panel">
                 <ul class="pricing-plan list-unstyled">
                     <li class="pricing-title">
                       Up To <u>{{plan.max_accounts}}</u> Accounts
@@ -60,7 +59,7 @@
                       <b>{{plan.name}}</b>: Perfectly uncomplicated analytics for your Instagram accounts!
                     </li>
                     <li class="pricing-price">
-                        {% if plan.price_pm %}
+                        {% if plan.price_pm != "" %}
                         <span>{{plan.price_pm}} / month</span><br>
 						(cancel anytime)
 						{% else %}
@@ -91,5 +90,4 @@
             {% endfor %}
         </div>
     </div>
-</section>
 {% endblock %}
