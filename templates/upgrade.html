@@ -93,7 +93,7 @@
                     <li>
                         {% if current_tier == plan.name %}
                         <a class="btn btn-primary btn-sm" href="#">Your Current Plan</a>
-                        {% else if plan.name == "Basic" %}
+                        {% elif plan.name == "Basic" %}
                         <a class="btn btn-primary btn-sm" href="/upgrade/{{plan.id}}">Free Forever</a>
                         {% else %}
                         <a class="btn btn-primary btn-sm" href="/upgrade/{{plan.id}}">Upgrade Now</a>
