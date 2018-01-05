@@ -47,13 +47,12 @@
                                     }
                                 },
                                 pk: {{ad_user.id}},
-                                value: {
-                                    max_accounts: $('#userid{{ad_user.id}}').text(),
-                                    _csrf_token: $('#csrft{{ad_user.id}}').text()
-                                },
                                 url: '/admin/{{ad_user.id}}/max_accounts',
                                 method: "post",
-                                //data: {"max_accounts" : $('#userid{{ad_user.id}}').text(), "_csrf_token" : $('#csrft{{ad_user.id}}').text() },
+                                params: function(params) {
+                                    params["_csrf_token"] = $("#csrft{{ad_user.id}}").text();
+                                    return params;
+                               },
                                 title: 'Edit maximum permitted accounts for {{ad_user.username}}'
                             });
                         </script>
