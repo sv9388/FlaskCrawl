@@ -179,8 +179,8 @@ def instaboard(handle, user=None):
                         engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
                         monthly_activity = monthly_activity, followers_today = iprofile_today.followers_count, engagement_today = iprofile_today.engagement_rate)
 
-@app.route("/instaaccounts", methods = ["GET", "POST"])
 @app.route("/", methods = ["GET"])
+@app.route("/instaaccounts", methods = ["GET", "POST"])
 @login_required
 def instaaccounts(user = None):
   existing_accounts = [x.instagram_id for x in user.iprofiles]
