@@ -30,7 +30,7 @@ def generate_csrf_token():
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
-from models import User, Role, Iprofile, IprofileData
+from models import User, Role, Iprofile, IprofileData, Tier
 from functools import wraps
 def login_required(f):
     @wraps(f)
@@ -285,10 +285,23 @@ def register():
     db.session.commit()
     return render_template('register.html', msg = "Registration complete. Login to the app to access features")
 
-@app.route('/upgrade')
+@app.route('/upgrade', methods = ["GET", "POST"])
 @login_required
 def upgrade(user = None):
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic)
+  tiers = Tier.query.all()
+  if request.method == "GET":
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+  if request.method == "POST":
+    print(request.form)
+    #TODO: REdirect to paypal here
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+
+@app.route('/postplan', methods = ["GET"])
+@login_required
+def upgradeplansuccess(user = None):
+    tiers = Tier.query.all()
+    # TODO: Update db with tier
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
 
 @app.route('/user', methods = ['GET', 'POST'])
 @login_required

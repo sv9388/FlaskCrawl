@@ -1,4 +1,95 @@
-{% extends "layout.html" %}                                                                                                                     
+{% extends "layout.html" %}
 {% block content %}
-COMING SOON!
+<section id="pricing" class="bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-12">
+                <h2><span class="text-success">Upgrade</span> Your Plan</h2>
+                <p>Track even more of your (or your competition's) accounts</p>
+            </div>
+        </div>
+        <div class="row m-t-lg">
+            {% for plan in tiers[:3] %}
+            <div class="col-lg-3">
+                <ul class="pricing-plan list-unstyled">
+                    <li class="pricing-title">
+                      Up To <u>{{plan.max_accounts}}</u> Accounts
+                    </li>
+                    <li class="pricing-desc">
+                      <b>{{plan.name}}</b>: Perfectly uncomplicated analytics for your Instagram accounts!
+                    </li>
+                    <li class="pricing-price">
+                        {% if plan.price_pm %}
+                        <span>{{plan.price_pm}} / month</span><br>
+						(cancel anytime)
+						{% else %}
+						<span>FREE</span><br>
+						(forever)
+						{% endif %}
+                    </li>
+                    <li>
+                        Followers
+                    </li>
+                    <li>
+                        Engagement Rate
+                    </li>
+                    <li>
+                        Likes
+                    </li>
+                    <li>
+                        Daily Fluctuations
+                    </li>
+                    <li>
+                        White Label Reports <br>(COMING SOON)
+                    </li>
+                    <li>
+                        <a class="btn btn-primary btn-sm" href="/upgrade/{{plan.id}}">Free Forever</a>
+                    </li>
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="row m-t-lg">
+            {% for plan in tiers[3:] %}
+            <div class="col-lg-3">
+                <ul class="pricing-plan list-unstyled">
+                    <li class="pricing-title">
+                      Up To <u>{{plan.max_accounts}}</u> Accounts
+                    </li>
+                    <li class="pricing-desc">
+                      <b>{{plan.name}}</b>: Perfectly uncomplicated analytics for your Instagram accounts!
+                    </li>
+                    <li class="pricing-price">
+                        {% if plan.price_pm %}
+                        <span>{{plan.price_pm}} / month</span><br>
+						(cancel anytime)
+						{% else %}
+						<span>FREE</span><br>
+						(forever)
+						{% endif %}
+                    </li>
+                    <li>
+                        Followers
+                    </li>
+                    <li>
+                        Engagement Rate
+                    </li>
+                    <li>
+                        Likes
+                    </li>
+                    <li>
+                        Daily Fluctuations
+                    </li>
+                    <li>
+                        White Label Reports <br>(COMING SOON)
+                    </li>
+                    <li>
+                        <a class="btn btn-primary btn-sm" href="/upgrade/{{plan.id}}">Free Forever</a>
+                    </li>
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
 {% endblock %}

@@ -29,6 +29,14 @@ class Role(db.Model, RoleMixin):
     def __hash__(self):
         return hash(self.name)
 
+class Tier(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    min_accounts = db.Column(db.Integer, nullable = False)
+    max_accounts = db.Column(db.Integer, nullable = False)
+    price_pm = db.Column(db.Float, nullable = False)
+    paypal_button_link = db.Column(db.String(80), unique = True)
+
 class User(db.Model, UserMixin):
     def hash_password(self, password):
         self.password = pwd_context.encrypt(password)
@@ -58,6 +66,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(130))
     username = db.Column(db.String(), nullable = False)
     start_date = db.Column(db.DateTime, default = datetime.datetime.utcnow)
+    tier_id = db.Column(db.Integer, db.ForeignKey('tier.id'), nullable = False, default = 1)
+    tier = db.relationship('Tier', backref=backref("tier", cascade="all,delete"), lazy = True)
     max_insta_accounts = db.Column(db.Integer, default = 3, nullable = False)
     profile_pic = db.Column(db.String(255), nullable = False, default = "dummy_profile_pic.jpg")
     roles = db.relationship(
