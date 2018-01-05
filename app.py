@@ -20,7 +20,12 @@ def err400(e):
 def csrf_protect():
     if request.method == "POST":
         token = session.pop('_csrf_token', None)
+        print(token)
+        print(request.form)
+        print(request.json)
         gottoken = request.form['_csrf_token']
+        if not gottoken:
+            gottoken = request.json['_csrf_token']
         if not token or not token == gottoken:
             abort(400)
 
@@ -37,7 +42,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if token_id not in session or session[token_id] is None or User.verify_auth_token(session[token_id]) is None:
-            return render_template('login.html')#redirect(url_for('login', next=request.url)) #TODO: render template login.
+            return render_template('login.html')
         user = User.verify_auth_token(session[token_id])
         return f(*args, user = user, **kwargs)
     return decorated_function
@@ -235,7 +240,6 @@ def admin(user = None):
 @login_required
 def max_acc_edit(id, user = None):
     print(request.method)
-    print(request.json)
     print(user)
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
