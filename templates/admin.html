@@ -35,6 +35,7 @@
                             <td><span id = "userid{{ad_user.id}}" pk="{{ad_user.id}}">{{ad_user.max_insta_accounts}}</span></td>
                         </tr>
                         <script type="text/javascript">
+                            //TODO: CSRF Token data: { _csrf_token: "{{ csrf_token() }}""}
                             $('#userid{{ad_user.id}}').editable({
                                 type: 'text',
                                 validate: function(value) {

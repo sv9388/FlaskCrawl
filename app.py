@@ -12,15 +12,14 @@ DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
 
 @app.errorhandler(400)
 def err400(e):
+    print(e)
     return render_template('login.html', msg = "You have submitted an erroneous request. Flush cookies and retry. If the problem persists, contact admin!")
 
 @app.before_request
 def csrf_protect():
     if request.method == "POST":
         token = session.pop('_csrf_token', None)
-        print(type(token))
         gottoken = request.form['_csrf_token']
-        print(type(gottoken))
         if not token or not token == gottoken:
             abort(400)
 
@@ -181,7 +180,7 @@ def instaboard(handle, user=None):
                         monthly_activity = monthly_activity, followers_today = iprofile_today.followers_count, engagement_today = iprofile_today.engagement_rate)
 
 @app.route("/instaaccounts", methods = ["GET", "POST"])
-@app.route("/")
+@app.route("/", methods = ["GET"])
 @login_required
 def instaaccounts(user = None):
   existing_accounts = [x.instagram_id for x in user.iprofiles]
