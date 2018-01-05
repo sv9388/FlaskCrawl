@@ -292,6 +292,14 @@ def upgrade(user = None):
   tiers = Tier.query.all()
   return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
 
+@app.route('/postplan', methods = ["GET"])
+@login_required
+def upgradeplansuccess(user = None):
+    tiers = Tier.query.all()
+    # TODO: Update db with tier
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+
+
 @app.route("/upgrade/<int:planid>")
 @login_required
 def upgrade_plan(planid, user = None):
@@ -299,15 +307,9 @@ def upgrade_plan(planid, user = None):
   tier = Tier.query.filter_by(id = planid).first()
   if not tier:
     return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
-  paypalr = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&return=%s&hosted_button_id=%s" % (SERVER_NAME + url_for("/postplan"), tier.paypal_button_link)
+  paypalr = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&return=%s&hosted_button_id=%s" % (SERVER_NAME + url_for("upgradeplansuccess"), tier.paypal_button_link)
   return redirect(paypalr)
 
-@app.route('/postplan', methods = ["GET"])
-@login_required
-def upgradeplansuccess(user = None):
-    tiers = Tier.query.all()
-    # TODO: Update db with tier
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
 
 @app.route('/user', methods = ['GET', 'POST'])
 @login_required
