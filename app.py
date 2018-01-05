@@ -20,12 +20,7 @@ def err400(e):
 def csrf_protect():
     if request.method == "POST":
         token = session.pop('_csrf_token', None)
-        print(token)
-        print(request.form)
-        print(request.json)
         gottoken = request.form['_csrf_token']
-        if not gottoken:
-            gottoken = request.json['_csrf_token']
         if not token or not token == gottoken:
             abort(400)
 
@@ -239,14 +234,12 @@ def admin(user = None):
 @app.route("/admin/<int:id>/max_accounts", methods = ["POST"])
 @login_required
 def max_acc_edit(id, user = None):
-    print(request.method)
     print(user)
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
         return render_template('login.html', msg = "Not allowed to do perform this action.")
     eduser = User.query.filter_by(id = id).first()
-    eduser.max_insta_accounts = int(request.form['max_accounts'])
-    print(eduser)
+    eduser.max_insta_accounts = int(request.form['value'])
     db.session.add(eduser)
     db.session.commit()
 
