@@ -47,8 +47,10 @@
                                     }
                                 },
                                 pk: {{ad_user.id}},
-                                max_accounts: $('#userid{{ad_user.id}}').text(),
-                                _csrf_token: $('#csrft{{ad_user.id}}').text(),
+                                value: {
+                                    max_accounts: $('#userid{{ad_user.id}}').text(),
+                                    _csrf_token: $('#csrft{{ad_user.id}}').text()
+                                },
                                 url: '/admin/{{ad_user.id}}/max_accounts',
                                 method: "post",
                                 //data: {"max_accounts" : $('#userid{{ad_user.id}}').text(), "_csrf_token" : $('#csrft{{ad_user.id}}').text() },
