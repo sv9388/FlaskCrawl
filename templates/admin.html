@@ -34,6 +34,8 @@
                             <td>{{ad_user.email}}</td>
                             <td><span id = "userid{{ad_user.id}}" pk="{{ad_user.id}}">{{ad_user.max_insta_accounts}}</span></td>
                         </tr>
+                        <p id="csrft{{ad_user.id}}" hidden>{{ csrf_token() }}</p>
+
                         <script type="text/javascript">
                             //TODO: CSRF Token data: { _csrf_token: "{{ csrf_token() }}""}
                             $('#userid{{ad_user.id}}').editable({
@@ -47,7 +49,7 @@
                                 pk: {{ad_user.id}},
                                 url: '/admin/{{ad_user.id}}/max_accounts',
                                 method: "post",
-                                data: {"max_accounts" : $('#userid{{ad_user.id}}').text()},
+                                data: {"max_accounts" : $('#userid{{ad_user.id}}').text(), "_csrf_token" : $('#csrft{{ad_user.id}}').text() },
                                 title: 'Edit maximum permitted accounts for {{ad_user.username}}'
                             });
                         </script>

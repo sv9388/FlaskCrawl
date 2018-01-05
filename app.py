@@ -312,6 +312,7 @@ def upgradeplansuccess(planid, user = None):
         return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "This is not the correct amount for " + mod_tier.name + " plan. Please ensure that you are on the subscription of  " + str(mod_tier.price_pm) + " per month.")
 
     user.tier = mod_tier
+    user.max_insta_accounts = mod_tier.max_accounts
     db.session.add(user)
     db.session.commit()
     print("Updated to user tier " + user.tier.name)
