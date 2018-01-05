@@ -292,12 +292,37 @@ def upgrade(user = None):
   tiers = Tier.query.all()
   return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
 
-@app.route('/postplan', methods = ["GET"])
+@app.route('/ppsuccess/<int:planid>', methods = ["GET"])
 @login_required
-def upgradeplansuccess(user = None):
+def upgradeplansuccess(planid, user = None):
+    print(request.args)
     tiers = Tier.query.all()
-    # TODO: Update db with tier
+    if request.args['st'].lower().strip() != "completed":
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "It looks like your transaction didn't go through. Please contact admin in case amount has been withdrawn.")
+
+    paid_amt = request.args['amt'].strip()
+    if paid_amt != "":
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "It looks like you haven't paid yet. Please contact admin in case amount has been withdrawn.")
+
+    mod_tier = Tier.filter_by(id = planid).first()
+    if not mod_tier:
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
+
+    if int(paid_amt) != mod_tier.price_pm:
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "This is not the correct amount for " + mod_tier.name + " plan. Please ensure that you are on the subscription of  " + str(mod_tier.price_pm) + " per month.")
+
+    user.tier = mod_tier
+    db.session.add(user)
+    db.session.commit()
+    print("Updated to user tier " + user.tier.name)
     return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+
+
+@app.route('/ppcancel/<int:planid>', methods = ["GET"])
+@login_required
+def upgradeplancancel(planid, user = None):
+    tiers = Tier.query.all()
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Your payment was cancelled.")
 
 @app.route("/upgrade/<int:planid>")
 @login_required
