@@ -7,7 +7,7 @@
                 <p>Track even more of your (or your competition's) accounts</p>
             </div>
         </div>
-        <div class="row m-t-lg">
+        <div class="row">
             {% for plan in tiers[:3] %}
             <div class="col-lg-3 panel">
                 <ul class="pricing-plan list-unstyled">
@@ -46,9 +46,11 @@
                     </li>
                 </ul>
             </div>
+
+
             {% endfor %}
         </div>
-        <div class="row m-t-lg">
+        <div class="row">
             {% for plan in tiers[3:] %}
             <div class="col-lg-3 panel">
                 <ul class="pricing-plan list-unstyled">
