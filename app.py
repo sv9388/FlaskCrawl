@@ -241,7 +241,7 @@ def max_acc_edit(id, user = None):
         session.clear()
         return render_template('login.html', msg = "Not allowed to do perform this action.")
     eduser = User.query.filter_by(id = id).first()
-    eduser.max_insta_accounts = int(request.form['value'])
+    eduser.max_insta_accounts = int(request.form['max_accounts'])
     print(eduser)
     db.session.add(eduser)
     db.session.commit()
