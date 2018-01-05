@@ -9,6 +9,7 @@ db = SQLAlchemy(app)
 default_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"}
 token_id = "access_token"
 DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
+SERVER_NAME = "https://analytics.socialmedia.com/"
 
 @app.errorhandler(400)
 def err400(e):
@@ -285,16 +286,21 @@ def register():
     db.session.commit()
     return render_template('register.html', msg = "Registration complete. Login to the app to access features")
 
-@app.route('/upgrade', methods = ["GET", "POST"])
+@app.route('/upgrade')
 @login_required
 def upgrade(user = None):
   tiers = Tier.query.all()
-  if request.method == "GET":
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
-  if request.method == "POST":
-    print(request.form)
-    #TODO: REdirect to paypal here
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+  return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+
+@app.route("/upgrade/<int:planid>")
+@login_required
+def upgrade_plan(planid, user = None):
+  tiers = Tier.query.all()
+  tier = Tier.query.filter_by(id = planid).first()
+  if not tier:
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
+  paypalr = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&return=%s&hosted_button_id=%s" % (SERVER_NAME + url_for("/postplan"), tier.paypal_button_link)
+  return redirect(paypalr)
 
 @app.route('/postplan', methods = ["GET"])
 @login_required
