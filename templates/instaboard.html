@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
+
+{% if "summary" in filters %}
 <div class = "row">
 {% for x in dashboard_summary %}
     <div class="col-md-3">
@@ -19,6 +21,9 @@
     </div>
 {% endfor %}
 </div>
+{% endif %}
+<br/>
+
 <div class="row ">
     <div class="hpanel">
         <div class="panel-body">
@@ -62,22 +67,37 @@
     </div>
 </div>
 <br/>
+
 <div class = "row">
     <form method="post" action="{{ url_for('instaboard', handle = handle) }}" id="dateiboardform">
         <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
-        <div class="col-lg-10">
+        <div class="col-lg-8">
             <div class="input-daterange input-group" id="datepicker">
-                <input type="text" class="input-sm form-control" name="startdate"/>
+                <input type="text" class="input-sm form-control" id = "startdate" name="startdate"/>
                 <span class="input-group-addon">to</span>
-                <input type="text" class="input-sm form-control" name="enddate"/>
+                <input type="text" class="input-sm form-control" id = "enddate" name="enddate"/>
             </div>
+        </div>
+        <div class="col-lg-2 btn-group" title = "Pick your own custom date range or select from the predefined ranges on the right">
+            <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span data-bind="label">Custom Date Range</span>&nbsp;&nbsp;&nbsp;<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li><a class="dropdown-item" href="#">Custom Date Range</a></li>
+                <li><a class="dropdown-item" href="#">Last Week</a></li>
+                <li><a class="dropdown-item" href="#">Last 2 Weeks</a></li>
+                <li><a class="dropdown-item" href="#">Last Month</a></li>
+                <li><a class="dropdown-item" href="#">Last 3 Months</a></li>
+                <li><a class="dropdown-item" href="#">Last 6 Months</a></li>
+                <li><a class="dropdown-item" href="#">Last Year</a></li>
+            </ul>
         </div>
         <div class="col-lg-2"><button class="btn btn-success">Retrieve Stats</button></div>
     </form>
 </div>
-<br/>
 <div class = "row">
-    <div class="col-lg-9">
+    {% if "followersc" in filters %}
+    <div class = "{% if 'activity' in filters %}col-lg-9{% else %}col-lg-12{% endif %}">
         <div class="hpanel">
             <div class="panel-heading">
                 <div class="panel-tools">
@@ -93,6 +113,9 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
+    {% if "activity" in filters %}
     <div class="col-lg-3">
         <div class="hpanel">
             <div class="panel-heading">
@@ -142,7 +165,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
+
+{% if "engagementc" in filters %}
 <div class = "row">
     <div class="col-lg-9">
         <div class="hpanel">
@@ -179,7 +205,11 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+
 <div class = "row">
+    {% if "likesc" in filters %}
     <div class="col-lg-12">
         <div class="hpanel">
             <div class="panel-heading">
@@ -196,8 +226,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 <div class = "row">
+    {% if "fvsmnlikec" in filters %}
     <div class="col-lg-12">
         <div class="hpanel">
             <div class="panel-heading">
@@ -214,9 +246,106 @@
             </div>
         </div>
     </div>
+    {% endif %}
+</div>
+
+<div class = "row">
+    <div class="panel-body">
+        <form class="form-inline" id="filtersform">
+            {% for flt, val in all_filters.items() %}
+                <label class="checkbox-inline"><input type="checkbox" class="i-checks" id="{{flt}}" name="filters" value="{{flt}}" {% if flt in filters %} checked {% endif %}>  {{val}}</label>
+            {% endfor %}
+            <input name=_csrf_token type=hidden value="{{csrf_token()}}">
+            <button class="btn w-xs btn-success" id="filtersbutton">Filter Dashboard</button>
+        </form>
+    </div>
 </div>
 
 <script type="text/javascript">
+  $("#filtersbutton").on('click', function(e) {
+    e.preventDefault();
+    var action_user_id = $(this).attr('buttonuser_id');
+    var data = $("#filtersform").serialize();
+    console.log(data);
+    $.ajax({
+        url : "{{url_for('set_filters')}}", data : data, method: "POST", dataType: "json", async: false,
+        success: function(response, statusCode) {
+          console.log(response);
+          toastr.warning(response.msg);
+        },
+        error: function(response, statusCode) {
+                      console.log(response);
+
+          op = response;
+        }
+    });
+  });
+
+function getFormattedDate(date) {
+  var year = date.getFullYear();
+
+  var month = (1 + date.getMonth()).toString();
+  month = month.length > 1 ? month : '0' + month;
+
+  var day = date.getDate().toString();
+  day = day.length > 1 ? day : '0' + day;
+
+  return month + '/' + day + '/' + year;
+}
+
+    $( document.body ).on( 'click', '.dropdown-menu li', function( event ) {
+        var $target = $(event.currentTarget);
+        console.log($target.text());
+        var range = $.trim($target.text());
+        var today = new Date();
+        $("#enddate").val(getFormattedDate(today));
+
+        if(range.startsWith("Last Week")){
+            var today = new Date();
+            today.setDate(today.getDate() - 7);
+            console.log(today);
+            $("#startdate").val(getFormattedDate(today));
+        }
+        else if(range.startsWith("Last 2 Weeks")){
+            var today = new Date();
+            today.setDate(today.getDate() - 14);
+                        console.log(today);
+
+            $("#startdate").val(getFormattedDate(today));
+        }
+        else if(range.startsWith("Last Month")){
+            var today = new Date();
+            today.setDate(today.getDate() - 30);
+                    console.log(today);
+
+            $("#startdate").val(getFormattedDate(today));
+        }
+        else if(range.startsWith("Last 3 Months")){
+            today = new Date();
+            today.setDate(today.getDate() - 90);
+            console.log(today);
+
+            $("#startdate").val(getFormattedDate(today));
+        }
+        else if(range.startsWith("Last 6 Months")){
+            today = new Date();
+            today.setDate(today.getDate() - 180);
+            console.log(today);
+
+            $("#startdate").val(getFormattedDate(today));
+        }
+        else if(range.startsWith("Last Year")){
+            today = new Date();
+            today.setDate(today.getDate() - 365);
+            $("#startdate").val(getFormattedDate(today));
+        }
+
+        $target.closest('.btn-group').find('[data-bind="label"]').text($target.text()).end().children('.dropdown-toggle').dropdown('toggle');
+        return false;
+   });
+</script>
+<script type="text/javascript">
+    {% if "likesc" in filters %}
     var media_likesrawdata = []
     var arr = []
     {% for x in media_likes_raw_data %}
@@ -276,14 +405,18 @@
         }
     };
     $.plot($("#medialikeschart"), media_likesdata, media_likesChartOptions);
+    {% endif %}
 
-
+    {% if "followersc" in filters or "fvsmnlikec" in filters %}
     var followersrawdata = []
     var arr = []
     {% for x in followers_raw_data %}
       followersrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
       arr.push({{x[1]}});
     {% endfor %}
+    {% endif %}
+
+    {% if "followersc" in filters %}
     var arrmax = Math.max.apply(null, arr) ;
     var arrmin = Math.min.apply(null, arr) ;
     var arrticks = Math.round((arrmax - arrmin)/10);
@@ -342,7 +475,9 @@
         }
     };
     $.plot($("#followerschart"), followersdata, followersChartOptions);
+    {% endif %}
 
+    {% if "engagementc" in filters %}
     var engagementrawdata = []
     {% for x in engagement_rate_raw_data %}
       engagementrawdata.push([new Date("{{x[0]}}"), {{x[1]}}]);
@@ -397,7 +532,9 @@
         }
     };
     $.plot($("#engagementchart"), engagementdata, engagementChartOptions);
+    {% endif %}
 
+    {% if "fvsmnlikec" in filters %}
     var likedata = []
     var arr = []
     {% for x in media_likes_mv_avg %}
@@ -436,8 +573,10 @@
         }
     };
     $.plot($("#followlikechart"), followlikedata, followLikeChartOptions);
-
+    {% endif %}
 </script>
+
+{% if "activity" in filters %}
 <script type="text/javascript">
 
 $("#activitytoday").on('click', function(e){
@@ -509,7 +648,9 @@ $("#activitymonth").on('click', function(e){
     $("#aposstatuschange").addClass("fa fa-level-down");
     {% endif %}
 });
-
+</script>
+{% endif %}
+<script type="text/javascript">
 function formatDate(date) {
   var monthNames = [
     "January", "February", "March",
@@ -539,6 +680,5 @@ $("#datepicker").on("changeDate", function(event) {
 
 $('.input-group.date').datepicker({dateFormat: "yyyy/mm/dd"});
 $('.input-daterange').datepicker({dateFormat: "yyyy/mm/dd"});
-
 </script>
 {% endblock %}

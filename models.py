@@ -69,7 +69,7 @@ class User(db.Model, UserMixin):
     tier_id = db.Column(db.Integer, db.ForeignKey('tier.id'), nullable = False, default = 1)
     tier = db.relationship('Tier', backref=backref("tier", cascade="all,delete"), lazy = True)
     max_insta_accounts = db.Column(db.Integer, default = 3, nullable = False)
-    profile_pic = db.Column(db.String(255), nullable = False, default = "dummy_profile_pic.jpg")
+    profile_pic = db.Column(db.String(255), nullable = False, default = "dummy_logo.jpg")
     roles = db.relationship(
         'Role',
         secondary=roles_users,

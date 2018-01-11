@@ -37,7 +37,6 @@
                         <p id="csrft{{ad_user.id}}" hidden>{{ csrf_token() }}</p>
 
                         <script type="text/javascript">
-                            //TODO: CSRF Token data: { _csrf_token: "{{ csrf_token() }}""}
                             $('#userid{{ad_user.id}}').editable({
                                 type: 'text',
                                 validate: function(value) {

@@ -1,15 +1,24 @@
-from flask import session, url_for, Flask, request, redirect, render_template, abort
+from flask import session, url_for, Flask, request, redirect, render_template, abort, jsonify
+from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
-import datetime, requests, json, binascii, os, re
+import datetime, binascii, os, re, logging, sys
 
 app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.DEBUG)
+
 db = SQLAlchemy(app)
 
-default_summary = {'Follower Change' : 0, 'Following Change' : 0, 'Post Change' : 0, 'Engagement Rate Change' : "0.0 %"}
 token_id = "access_token"
-DB_DATE_FS = '{:%Y-%m-%d 00:00:00}'
-SERVER_NAME = "analytics.socialmedia.com"
+
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+ALL_FILTERS = ['summary', 'followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
+FILTER_DICT = {'summary' : "Summary", 'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
+SERVER_NAME = "smsilo.pythonanywhere.com" #TODO: Test "analytics.socialmedia.com"
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.errorhandler(400)
 def err400(e):
@@ -21,6 +30,8 @@ def csrf_protect():
     if request.method == "POST":
         token = session.pop('_csrf_token', None)
         gottoken = request.form['_csrf_token']
+        print(gottoken)
+        print(token)
         if not token or not token == gottoken:
             abort(400)
 
@@ -31,6 +42,7 @@ def generate_csrf_token():
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 
+from insta_utils import DB_DATE_FS, get_likes_moving_average, get_summary, get_activity, get_insta_profile_pic, get_chart_data
 from models import User, Role, Iprofile, IprofileData, Tier
 from functools import wraps
 def login_required(f):
@@ -42,163 +54,123 @@ def login_required(f):
         return f(*args, user = user, **kwargs)
     return decorated_function
 
-def get_insta_profile_pic(handle):
-    r = requests.get("""https://www.instagram.com/%s/?__a=1"""%handle)
-    return json.loads(r.content)['user']['profile_pic_url']
-
-def get_likes_moving_average(iprofiles):
-  media_likes_mv_avg = []
-  i = 0
-  j = 0
-  while j < len(iprofiles):
-      den = 7 if (j-i)==7 else ((j-i)+1)
-      num = sum([x.media_likes for x in iprofiles[i:j+1]])
-      media_likes_mv_avg.append([iprofiles[j].date.strftime('%Y/%m/%d'), num * 1./den])
-      j+=1
-      i = i+1 if (j-i)==7 else i
-
-  if len(media_likes_mv_avg)>=14:
-      media_likes_mv_avg = media_likes_mv_avg[-14:]
-  return media_likes_mv_avg
-
-def get_summary(startp, endp):
-    if not endp:
-        return default_summary
-    return {'Follower Change' : endp.followers_count - (startp.followers_count if startp else 0),
-                       'Following Change' : endp.following_count -  (startp.following_count if startp else 0),
-                       'Post Change' : endp.media_likes -  (startp.media_likes if startp else 0),
-                       'Engagement Rate Change' : "{:3.1f} %".format((endp.engagement_rate - (startp.engagement_rate if startp else 0))*100)}
-
-
-diffact = lambda s, e : [e, "{:.2f} %".format((s-e)*100./s if s > 0 else 0.0), 0] if s>e else [e, "{:.2f} %".format((e-s)*100./e if e > 0 else 0.0), 1]
-def get_activity(handle):
-  tstart_date = datetime.datetime.today()-datetime.timedelta(days=1)
-  mstart_date = datetime.datetime.today()-datetime.timedelta(days=31)
-  end_date = datetime.datetime.today()
-  tsp = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(tstart_date)).first()
-  msp = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(mstart_date)).first()
-  ep = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(end_date)).first()
-
-  deng = diffact(tsp.engagement_rate if tsp else 0, ep.engagement_rate)
-  deng = ["{:.2f} %".format(deng[0]), deng[1], deng[2]]
-  daily_activity = {'following' : diffact(tsp.following_count if tsp else 0, ep.following_count), \
-                    'followers' : diffact(tsp.followers_count if tsp else 0, ep.followers_count), \
-                    'engagement' : deng, \
-                    'likes' : diffact(tsp.media_likes if tsp else 0, ep.media_likes)}#, 'media' : [tsp.media_count if tsp else 0, ep.media_count]})
-
-  meng = diffact(msp.engagement_rate if msp else 0, ep.engagement_rate)
-  meng = ["{:.2f} %".format(meng[0]), meng[1], meng[2]]
-  monthly_activity = {'following' : diffact(msp.following_count if msp else 0, ep.following_count), \
-                      'followers' : diffact(msp.followers_count if msp else 0, ep.followers_count), \
-                      'engagement' : meng, \
-                      'likes' : diffact(tsp.media_likes if tsp else 0, ep.media_likes)}
-  return daily_activity, monthly_activity
-
 @app.route("/logout")
 def logout():
   session.clear()
   return render_template('login.html')
 
+def activity_util(handle, filters):
+    if "activity" not in filters:
+        app.logger.info("Activity not selected")
+        app.logger.debug(filters)
+        return None, None
+    daily_activity, monthly_activity = get_activity(handle)
+    app.logger.info("Monthly and daily activity retrieved")
+    return daily_activity, monthly_activity
+
+def summary_util(request, handle, filters):
+    if "summary" not in filters:
+        app.logger.info("Summary not selected")
+        app.logger.debug(filters)
+        return None, None
+    summary_start_date = datetime.datetime.today() -  datetime.timedelta(days=1)
+    summary_end_date = datetime.datetime.today()
+    if request.method == "POST":
+        summary_start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
+        summary_end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
+    app.logger.info("Retrieving dashboard summary for timerange %s and %s", summary_start_date, summary_end_date)
+    dashboard_summary = get_summary(handle, summary_start_date, summary_end_date)
+    app.logger.info("Retrieved Dashboard summary")
+    return dashboard_summary, summary_start_date
+
+def chart_util(request, handle, filters):
+    chart_start_date = datetime.datetime.today()-datetime.timedelta(days=15)
+    chart_end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
+    if request.method == "POST":
+        chart_start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
+        chart_end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
+        print(chart_start_date)
+    app.logger.info("Retrieving chart data for timerange %s and %s", chart_start_date, chart_end_date)
+    following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = get_chart_data(handle, chart_start_date, chart_end_date, filters)
+    app.logger.info("Retrieved chart data")
+    return following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data
+
+def mv_avg_util(request, handle, filters):
+    if "fvsmnlikec" not in filters:
+        app.logger.info("Moving Avg Chart not selected")
+        app.logger.debug(filters)
+        return None
+
+    mv_avg_start_date = datetime.datetime.today() - datetime.timedelta(days=15)
+    mv_avg_end_date = datetime.datetime.today() - datetime.timedelta(days=1)
+    if request.method == "POST":
+        mv_avg_start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
+        mv_avg_end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
+    mv_avg_start_date = mv_avg_start_date - datetime.timedelta(days=7)
+    media_likes_mv_avg = get_likes_moving_average(handle, mv_avg_start_date, mv_avg_end_date)
+    return media_likes_mv_avg
+
+
+@app.route("/ig/filters", methods = ["POST"])
+def set_filters():
+    print(request.form.getlist('filters'))
+    print(session)
+    session['_filters'] = request.form.getlist('filters')
+    print(session)
+    return jsonify(msg = "Filters updated. Please refresh the page.")
+
 @app.route("/ig/<string:handle>", methods = ["GET", "POST"])
 @login_required
 def instaboard(handle, user=None):
-  print(user)
-  print(handle)
-  detail_str = "the past 14 days" if request.method == "GET" else " between %s and %s" % (request.form['startdate'], request.form['enddate'])
-  accounts = [x.instagram_id for x in user.iprofiles]
+  app.logger.info('%s is checking handle %s', user.email, handle)
+  accounts = sorted([x.instagram_id for x in user.iprofiles])
   if handle not in accounts:
     session.clear()
     return render_template('login.html', msg = "Not a registered account to monitor.")
 
-  iprofileq = IprofileData.query.filter_by(iprofile_id = handle)
-  iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-  summary_start_date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))
-  if iprofile_today is None:
-    return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-            profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
-            dashboard_summary = default_summary, summary_start_date = summary_start_date, \
-            following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
-            engagement_rate_raw_data = [], media_likes_mv_avg = [], \
-            daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
-            monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
-            followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
-            engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
-            msg = "Nothing here yet! Check back in 2 days.")
+  iprofile_today = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
+  followers_today = iprofile_today.followers_count if iprofile_today else 0
+  engagement_today = iprofile_today.engagement_rate if iprofile_today else 0.0
 
-  daily_activity, monthly_activity = get_activity(handle)
+  filters = session.get("_filters", ALL_FILTERS)
+  print(filters)
+  daily_activity, monthly_activity = activity_util(handle, filters)
+  dashboard_summary, summary_start_date = summary_util(request, handle, filters)
+  detail_str = "the past 14 days" if request.method == "GET" else " between %s and %s" % (request.form['startdate'], request.form['enddate'])
+  following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = chart_util(request, handle, filters)
+  media_likes_mv_avg = mv_avg_util(request, handle, filters)
 
-  dashboard_summary = {}
-  summary_start_date = summary_start_date
-  if request.method == "GET":
-    iprofile_today = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-    iprofile_yestr = iprofileq.filter_by(date = DB_DATE_FS.format(datetime.datetime.today() -  datetime.timedelta(days=1))).first()
-    dashboard_summary = get_summary(iprofile_yestr,  iprofile_today)
-  elif request.method == "POST":
-    start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
-    end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
-    iprofile_start = iprofileq.filter_by(date = DB_DATE_FS.format(start_date)).first()
-    iprofile_end = iprofileq.filter_by(date = DB_DATE_FS.format(end_date)).first()
-    dashboard_summary = get_summary(iprofile_start, iprofile_end)
-    summary_start_date = DB_DATE_FS.format(start_date)
-  else:
-    return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-            profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, \
-            dashboard_summary = default_summary, summary_start_date = summary_start_date,\
-            following_raw_data = [], followers_raw_data = [],  media_likes_raw_data = [], \
-            engagement_rate_raw_data = [], media_likes_mv_avg = [], \
-            daily_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
-            monthly_activity = {'followers' : [0,0,0], 'following' : [0,0,0], 'engagement' : [0,0,0], 'likes' : [0, 0, 0]}, \
-            followers_today = 0 if iprofile_today is None else iprofile_today.followers_count, \
-            engagement_today = 0.0 if iprofile_today is None else iprofile_today.engagement_rate, \
-            msg = "Unsupported method.")
-
-  start_date = datetime.datetime.today()-datetime.timedelta(days=15)
-  end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
-  if request.method == "POST":
-    start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
-    end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
-    print(start_date)
-    print(end_date)
-  iprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).order_by(IprofileData.date).all()
-
-  db_date = lambda dt : dt.strftime('%Y/%m/%d')
-  following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
-  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles]
-  engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles]
-  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles]
-
-  start_date = start_date - datetime.timedelta(days = 7)
-  mvprofiles = iprofileq.filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).order_by(IprofileData.date).all()
-  media_likes_mv_avg = get_likes_moving_average(mvprofiles)
-
-  print(followers_raw_data)
-  print(engagement_rate_raw_data)
   return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-                        profile_pic = user.profile_pic, handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str,  \
+                        profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, handle = handle, \
+                        iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str,  \
                         dashboard_summary = dashboard_summary, summary_start_date = summary_start_date,\
                         following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
                         engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
-                        monthly_activity = monthly_activity, followers_today = iprofile_today.followers_count, engagement_today = iprofile_today.engagement_rate)
+                        monthly_activity = monthly_activity, followers_today = followers_today, engagement_today = engagement_today)
 
 @app.route("/", methods = ["GET"])
 @app.route("/instaaccounts", methods = ["GET", "POST"])
 @login_required
 def instaaccounts(user = None):
-  existing_accounts = [x.instagram_id for x in user.iprofiles]
+  filters = session.get("_filters", ALL_FILTERS)
+  existing_accounts = sorted([x.instagram_id for x in user.iprofiles])
   if request.method == "GET":
     print(user.email)
-    return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), profile_pic = user.profile_pic, account_limit = user.max_insta_accounts)
+    return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), \
+                            profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, account_limit = user.max_insta_accounts)
   if request.method == "POST":
     updated_accounts = request.form['accounts']
     updated_accounts = list(set(updated_accounts.split(',')))
     correct_accounts = [x.lower() for x in updated_accounts if re.match("^[a-zA-Z0-9_\.]*$", x)]
     incorrect_accounts = list(set(updated_accounts) - set(correct_accounts))
     if len(updated_accounts) != len(correct_accounts):
-        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), profile_pic = user.profile_pic, \
-        account_limit = user.max_insta_accounts, msg = "Instagram handles can contain alphanumeric character, _ and . The following accounts don't meet that criteria: " + ", ".join(incorrect_accounts))
+        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), \
+                profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                account_limit = user.max_insta_accounts, msg = "Instagram handles can contain alphanumeric character, _ and . The following accounts don't meet that criteria: " + ", ".join(incorrect_accounts))
     if len(correct_accounts) > user.max_insta_accounts:
-        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), profile_pic = user.profile_pic, \
-        account_limit = user.max_insta_accounts, msg = "You cannot monitor more than %d accounts"%user.max_insta_accounts)
+        return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), \
+                            profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                            account_limit = user.max_insta_accounts, msg = "You cannot monitor more than %d accounts"%user.max_insta_accounts)
 
     delete_accounts = user.iprofiles
     for x in delete_accounts:
@@ -217,7 +189,9 @@ def instaaccounts(user = None):
     db.session.add(user)
     db.session.commit()
     print(','.join([x.instagram_id for x in user.iprofiles]))
-    return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, account_limit = user.max_insta_accounts, msg = "Updated the account handles you are monitoring. Come back tomorrow for some interesting info!")
+    return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = sorted([x.instagram_id for x in user.iprofiles]), \
+            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            account_limit = user.max_insta_accounts, msg = "Updated the account handles you are monitoring. Come back tomorrow for some interesting info!")
 
   session.clear()
   return render_template('login.html', msg = "Not allowed to do perform this action.")
@@ -225,11 +199,13 @@ def instaaccounts(user = None):
 @app.route("/admin")
 @login_required
 def admin(user = None):
+    filters = session.get("_filters", ALL_FILTERS)
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
         return render_template('login.html', msg = "Not allowed to do perform this action.")
     all_users = User.query.all()
-    return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, all_users = all_users)
+    return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles],\
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
 
 @app.route("/admin/<int:id>/max_accounts", methods = ["POST"])
 @login_required
@@ -244,10 +220,12 @@ def max_acc_edit(id, user = None):
     db.session.commit()
 
     all_users = User.query.all()
-    return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, all_users = all_users)
+    return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
+  print(request)
   if request.method == "GET":
     if token_id in session:
       return redirect(url_for('instaaccounts'))
@@ -286,51 +264,73 @@ def register():
 @app.route('/upgrade')
 @login_required
 def upgrade(user = None):
+  filters = session.get("_filters", ALL_FILTERS)
   tiers = Tier.query.all()
-  return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+  return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            current_tier = user.tier.name, tiers = tiers)
 
 @app.route('/ppsuccess/<int:planid>', methods = ["GET"])
 @login_required
 def upgradeplansuccess(planid, user = None):
+    filters = session.get("_filters", ALL_FILTERS)
     print(request.args)
     tiers = Tier.query.all()
     if request.args['st'].lower().strip() != "completed":
-        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "It looks like your transaction didn't go through. Please contact admin in case amount has been withdrawn.")
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                        username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                        current_tier = user.tier.name, tiers = tiers, msg = "It looks like your transaction didn't go through. Please contact admin in case amount has been withdrawn.")
 
     paid_amt = request.args['amt'].strip()
     if paid_amt != "":
-        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "It looks like you haven't paid yet. Please contact admin in case amount has been withdrawn.")
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                    username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                    current_tier = user.tier.name, tiers = tiers, msg = "It looks like you haven't paid yet. Please contact admin in case amount has been withdrawn.")
 
     mod_tier = Tier.filter_by(id = planid).first()
     if not mod_tier:
-        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                    username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                    current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
 
     if int(paid_amt) != mod_tier.price_pm:
-        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "This is not the correct amount for " + mod_tier.name + " plan. Please ensure that you are on the subscription of  " + str(mod_tier.price_pm) + " per month.")
+        return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                    username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                    current_tier = user.tier.name, tiers = tiers, msg = "This is not the correct amount for " + mod_tier.name + " plan. Please ensure that you are on the subscription of  " + str(mod_tier.price_pm) + " per month.")
 
     user.tier = mod_tier
     user.max_insta_accounts = mod_tier.max_accounts
     db.session.add(user)
     db.session.commit()
     print("Updated to user tier " + user.tier.name)
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers)
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                current_tier = user.tier.name, tiers = tiers)
 
 
 @app.route('/ppcancel/<int:planid>', methods = ["GET"])
 @login_required
 def upgradeplancancel(planid, user = None):
+    filters = session.get("_filters", ALL_FILTERS)
     tiers = Tier.query.all()
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Your payment was cancelled.")
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                current_tier = user.tier.name, tiers = tiers, msg = "Your payment was cancelled.")
 
 @app.route("/upgrade/<int:planid>")
 @login_required
 def upgrade_plan(planid, user = None):
+  filters = session.get("_filters", ALL_FILTERS)
   tiers = Tier.query.all()
   tier = Tier.query.filter_by(id = planid).first()
   if not tier:
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
   if user.tier.id == tier.id:
-    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, current_tier = user.tier.name, tiers = tiers, msg = "This is your current tier. Nothing to do.")
+    return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                current_tier = user.tier.name, tiers = tiers, msg = "This is your current tier. Nothing to do.")
 
   paypalr = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=%s" % tier.paypal_button_link
   return redirect(paypalr)
@@ -339,17 +339,39 @@ def upgrade_plan(planid, user = None):
 @app.route('/user', methods = ['GET', 'POST'])
 @login_required
 def app_user(user = None):
+  filters = session.get("_filters", ALL_FILTERS)
   if request.method == 'GET':
-    return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, email = user.email)
+    return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
   if request.method == "POST":
     if request.form['password'] != request.form['cpassword']:
-        return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, email = user.email)
+        return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
     user.username = request.form['username']
     if request.form['password'] != '':
         user.hash_password(request.form['password'])
+
+    pp_file = request.files['logo']
+    if pp_file.filename == '':
+      return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            email = user.email, msg = "Please upload a valid file")
+
+    if not allowed_file(pp_file.filename):
+      return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            email = user.email, msg = "Accepted filetypes are png and jpg")
+
+    filename = secure_filename(pp_file.filename)
+    filename = str(user.id)+"_"+filename
+    pp_file.save(os.path.join(app.static_folder, 'logos', filename))
+
+    user.profile_pic = filename
     db.session.add(user)
     db.session.commit()
-    return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], username = user.username.upper(), profile_pic = user.profile_pic, email = user.email, msg = "User details upgraded successfully.")
+    return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
+            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            email = user.email, msg = "User details upgraded successfully.")
 
 @app.route('/password/forgot', methods = ['GET', 'POST'])
 def forgot_password():
