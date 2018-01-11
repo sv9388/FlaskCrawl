@@ -344,23 +344,27 @@ def app_user(user = None):
     return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
                 username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
   if request.method == "POST":
+    if request.form['username'] != '':
+        user.username = request.form['username']
+
     if request.form['password'] != request.form['cpassword']:
         return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
                 username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
-    user.username = request.form['username']
+
     if request.form['password'] != '':
         user.hash_password(request.form['password'])
 
     pp_file = request.files['logo']
+    print(pp_file)
     if pp_file.filename == '':
       return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
             username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
-            email = user.email, msg = "Please upload a valid file")
+            email = user.email, msg = "Please upload a valid file. Accepted filetypes are png and jpg. Maximum possible file size is 4MB.")
 
     if not allowed_file(pp_file.filename):
       return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
             username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
-            email = user.email, msg = "Accepted filetypes are png and jpg")
+            email = user.email, msg = "Accepted filetypes are png and jpg. Maximum possible file size is 4MB.")
 
     filename = secure_filename(pp_file.filename)
     filename = str(user.id)+"_"+filename

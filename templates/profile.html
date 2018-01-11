@@ -9,7 +9,7 @@
         Edit Your Details
     </div>
     <div class="panel-body">
-        <form action="/user" method="POST" class="form-horizontal">
+        <form action="/user" method="POST" class="form-horizontal" enctype="multipart/form-data">
             <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
             <div class="form-group"><label class="col-lg-2 control-label">Email</label>
                 <div class="col-lg-10"><input type="text" disabled="" placeholder="{{email}}" class="form-control"></div>
@@ -28,9 +28,30 @@
             </div>
             <div class="hr-line-dashed"></div>
             <div class="form-group"><label class="col-sm-2 control-label">Logo</label>
-                <div class="col-sm-10"><input type="file" class="form-control" name="logo" id="logo"></div>
-                <img id="current_logo" src="{{profile_pic}}" alt="Your Current Logo" class="img-circle m-b" />
+                <div class="col-sm-10"><input type="file" class="form-control" name="logo" id="logo" size="4000000"></div>
             </div>
+            <div class="row">
+                <div class="col-sm-4"></div>
+                <div class="col-sm-4">
+                    <div class="card">
+                        <div class="card-block well">
+                            <div class="box ">
+                				<div class="icon">
+        		            		<div class="image"><img id="current_logo" src="{{profile_pic}}" alt="Your Current Logo" style="height: 180px; width: 180px;'"></div>
+        			            </div>
+        			            <div class="space"></div>
+        		            </div>
+                            <h5 class="text-bold">Your current logo. You can preview your logo, once you upload a file here.</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4"></div>
+            </div>
+            <!--
+            <div class="card card-inverse card-primary" style="width: 18rem;">
+                <blockquote class="card-blockquote p-3"><p></p></blockquote>
+            </div>-->
+
             <div class="hr-line-dashed"></div>
             <div class="form-group">
                 <div class="col-sm-8 col-sm-offset-2">
@@ -43,18 +64,22 @@
 </div>
 
 <script type="text/javascript">
-    function readURL(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                $('#current_logo').attr('src', e.target.result);
-            }
-            reader.readAsDataURL(input.files[0]);
+function readURL(ip) {
+    console.log(ip.files);
+    if (ip.files && ip.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            $('#current_logo').attr('src', e.target.result);
         }
+        reader.readAsDataURL(ip.files[0]);
     }
-
-    $("#logo").change(function(){
+}
+$(document).ready(function()
+{
+    $('input[type=file]').change(function(){
+        console.log("EEE");
         readURL(this);
     });
+});
 </script>
 {% endblock %}

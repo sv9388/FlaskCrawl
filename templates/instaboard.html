@@ -250,14 +250,16 @@
 </div>
 
 <div class = "row">
-    <div class="panel-body">
-        <form class="form-inline" id="filtersform">
-            {% for flt, val in all_filters.items() %}
-                <label class="checkbox-inline"><input type="checkbox" class="i-checks" id="{{flt}}" name="filters" value="{{flt}}" {% if flt in filters %} checked {% endif %}>  {{val}}</label>
-            {% endfor %}
-            <input name=_csrf_token type=hidden value="{{csrf_token()}}">
-            <button class="btn w-xs btn-success" id="filtersbutton">Filter Dashboard</button>
-        </form>
+    <div class="hpanel">
+        <div class="panel-body">
+            <form class="form-inline" id="filtersform">
+                {% for flt, val in all_filters.items() %}
+                    <label class="checkbox-inline"><input type="checkbox" class="i-checks" id="{{flt}}" name="filters" value="{{flt}}" {% if flt in filters %} checked {% endif %}> <span class="font-extra-bold text-success">{{val}}</span></label>
+                {% endfor %}
+                <input name=_csrf_token type=hidden value="{{csrf_token()}}">
+                <button class="btn w-xs btn-success" id="filtersbutton">Filter Dashboard</button>
+            </form>
+        </div>
     </div>
 </div>
 
