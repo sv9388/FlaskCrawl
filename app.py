@@ -15,7 +15,7 @@ token_id = "access_token"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 ALL_FILTERS = ['summary', 'followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
 FILTER_DICT = {'summary' : "Summary", 'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
-SERVER_NAME = "smsilo.pythonanywhere.com" #TODO: Test "analytics.socialmedia.com"
+SERVER_NAME =  "analytics.socialmedia.com"
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
