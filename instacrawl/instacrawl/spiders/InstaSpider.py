@@ -33,7 +33,9 @@ class InstaSpider(scrapy.Spider):
         #media = idata['user']['media']['count']
         posts = idata['user']['media']['nodes']
         max_pc = min(len(posts), 10)
-        media = sum([ posts[i]['likes']['count'] for i in range(max_pc)])/max_pc
+        media = 0
+        if max_pc > 0:
+            media = sum([ posts[i]['likes']['count'] for i in range(max_pcs)])/max_pc
         end = min(len(posts), MAX_ENGAGEMENT_POSTS + 1)
         engagement_rate =  sum([x['likes']['count'] for x in posts[1:end]]) * 1./(MAX_ENGAGEMENT_POSTS * followed_by) if followed_by > 0 else 0.0
         data = {'instagram_id' : idata['user']['username'], 'followers_count' : followed_by, 'following_count' : follows , 'date' : today, 'media_likes' : media, 'engagement_rate' : engagement_rate}
