@@ -1,14 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
 
-{% if "summary" in filters %}
 <div class = "row">
 {% for x in dashboard_summary %}
     <div class="col-md-3">
         <div class="hpanel {{loop.cycle('hbggreen', 'hbgblue', 'hbgyellow', 'hbgred')}}">
             <div class="panel-body">
                 <div class="text-center">
-                    <h3>{{x}}</h3>
+                    <h3 {% if x == "ER Change" %}title="Engagement Rate"{% endif %}>{{x}}</h3>
                     <p class="text-big font-light">
                         {{dashboard_summary[x]}}
                     </p>
@@ -21,9 +20,7 @@
     </div>
 {% endfor %}
 </div>
-{% endif %}
-<br/>
-
+<br/><br/>
 <div class="row ">
     <div class="hpanel">
         <div class="panel-body">
@@ -73,9 +70,9 @@
         <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
         <div class="col-lg-8">
             <div class="input-daterange input-group" id="datepicker">
-                <input type="text" class="input-sm form-control" id = "startdate" name="startdate"/>
+                <input type="text" class="input-sm form-control" id = "startdate" name="startdate" value="{{fstart_date}}"/>
                 <span class="input-group-addon">to</span>
-                <input type="text" class="input-sm form-control" id = "enddate" name="enddate"/>
+                <input type="text" class="input-sm form-control" id = "enddate" name="enddate" value="{{fend_date}}"/>
             </div>
         </div>
         <div class="col-lg-2 btn-group" title = "Pick your own custom date range or select from the predefined ranges on the right">
@@ -263,6 +260,33 @@
     </div>
 </div>
 
+<div class = "row">
+    <div class="hpanel">
+        <div class="panel-body">
+            <form class="text-center" action = "{{url_for('preview_report_ui', handle = handle)}}" target="_blank" method="post">
+                <input type="hidden" name = "_csrf_token" value = "{{csrf_token()}}">
+                <input type="hidden" name = "detail_str" value="{{detail_str}}">
+                <input type="hidden" name = "logofile" value="{{profile_pic}}">
+                <input type="hidden" name = "fstart_date" value="{{fstart_date}}">
+                <input type="hidden" name = "fend_date" value="{{fend_date}}">
+                <input type="hidden" name = "dashboard_summary" value="{{dashboard_summary}}">
+                <input type="hidden" name = "summary_start_date" value="{{summary_start_date}}">
+                <input type="hidden" name = "following_raw_data" value="{{following_raw_data}}">
+                <input type="hidden" name = "followers_raw_data" value="{{followers_raw_data}}">
+                <input type="hidden" name = "media_likes_raw_data" value="{{media_likes_raw_data}}">
+                <input type="hidden" name = "engagement_rate_raw_data" value="{{engagement_rate_raw_data}}">
+                <input type="hidden" name = "media_likes_mv_avg" value="{{media_likes_mv_avg}}">
+                <input type="hidden" name = "daily_activity" value="{{daily_activity}}">
+                <input type="hidden" name = "monthly_activity" value="{{monthly_activity}}">
+                <input type="hidden" name = "followers_today" value="{{followers_today}}">
+                <input type="hidden" name = "engagement_today" value="{{engagement_today}}">
+                <input type="submit" class="btn btn-success" value="Generate Report">
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <script type="text/javascript">
   $("#filtersbutton").on('click', function(e) {
     e.preventDefault();
@@ -285,66 +309,63 @@
 
 function getFormattedDate(date) {
   var year = date.getFullYear();
-
   var month = (1 + date.getMonth()).toString();
   month = month.length > 1 ? month : '0' + month;
-
   var day = date.getDate().toString();
   day = day.length > 1 ? day : '0' + day;
-
   return month + '/' + day + '/' + year;
 }
 
-    $( document.body ).on( 'click', '.dropdown-menu li', function( event ) {
-        var $target = $(event.currentTarget);
-        console.log($target.text());
-        var range = $.trim($target.text());
+$( document.body ).on( 'click', '.dropdown-menu li', function( event ) {
+    var $target = $(event.currentTarget);
+    console.log($target.text());
+    var range = $.trim($target.text());
+    var today = new Date();
+    $("#enddate").val(getFormattedDate(today));
+
+    if(range.startsWith("Last Week")){
         var today = new Date();
-        $("#enddate").val(getFormattedDate(today));
-
-        if(range.startsWith("Last Week")){
-            var today = new Date();
-            today.setDate(today.getDate() - 7);
-            console.log(today);
-            $("#startdate").val(getFormattedDate(today));
-        }
-        else if(range.startsWith("Last 2 Weeks")){
-            var today = new Date();
-            today.setDate(today.getDate() - 14);
-                        console.log(today);
-
-            $("#startdate").val(getFormattedDate(today));
-        }
-        else if(range.startsWith("Last Month")){
-            var today = new Date();
-            today.setDate(today.getDate() - 30);
+        today.setDate(today.getDate() - 7);
+        console.log(today);
+        $("#startdate").val(getFormattedDate(today));
+    }
+    else if(range.startsWith("Last 2 Weeks")){
+        var today = new Date();
+        today.setDate(today.getDate() - 14);
                     console.log(today);
 
-            $("#startdate").val(getFormattedDate(today));
-        }
-        else if(range.startsWith("Last 3 Months")){
-            today = new Date();
-            today.setDate(today.getDate() - 90);
-            console.log(today);
+        $("#startdate").val(getFormattedDate(today));
+    }
+    else if(range.startsWith("Last Month")){
+        var today = new Date();
+        today.setDate(today.getDate() - 30);
+                console.log(today);
 
-            $("#startdate").val(getFormattedDate(today));
-        }
-        else if(range.startsWith("Last 6 Months")){
-            today = new Date();
-            today.setDate(today.getDate() - 180);
-            console.log(today);
+        $("#startdate").val(getFormattedDate(today));
+    }
+    else if(range.startsWith("Last 3 Months")){
+        today = new Date();
+        today.setDate(today.getDate() - 90);
+        console.log(today);
 
-            $("#startdate").val(getFormattedDate(today));
-        }
-        else if(range.startsWith("Last Year")){
-            today = new Date();
-            today.setDate(today.getDate() - 365);
-            $("#startdate").val(getFormattedDate(today));
-        }
+        $("#startdate").val(getFormattedDate(today));
+    }
+    else if(range.startsWith("Last 6 Months")){
+        today = new Date();
+        today.setDate(today.getDate() - 180);
+        console.log(today);
 
-        $target.closest('.btn-group').find('[data-bind="label"]').text($target.text()).end().children('.dropdown-toggle').dropdown('toggle');
-        return false;
-   });
+        $("#startdate").val(getFormattedDate(today));
+    }
+    else if(range.startsWith("Last Year")){
+        today = new Date();
+        today.setDate(today.getDate() - 365);
+        $("#startdate").val(getFormattedDate(today));
+    }
+
+    $target.closest('.btn-group').find('[data-bind="label"]').text($target.text()).end().children('.dropdown-toggle').dropdown('toggle');
+    return false;
+});
 </script>
 <script type="text/javascript">
     {% if "likesc" in filters %}

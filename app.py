@@ -13,9 +13,10 @@ db = SQLAlchemy(app)
 token_id = "access_token"
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-ALL_FILTERS = ['summary', 'followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
-FILTER_DICT = {'summary' : "Summary", 'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
-SERVER_NAME =  "analytics.socialmedia.com"
+ALL_FILTERS = ['followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
+FILTER_DICT = {'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
+SERVER_NAME =  "analytics.socialmedia.com" #TEST: "smsilo.pythonanywhere.com" 
+UI_DATE_FS = '{:%m/%d/%Y}'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -68,47 +69,50 @@ def activity_util(handle, filters):
     app.logger.info("Monthly and daily activity retrieved")
     return daily_activity, monthly_activity
 
-def summary_util(request, handle, filters):
-    if "summary" not in filters:
-        app.logger.info("Summary not selected")
-        app.logger.debug(filters)
-        return None, None
-    summary_start_date = datetime.datetime.today() -  datetime.timedelta(days=1)
-    summary_end_date = datetime.datetime.today()
-    if request.method == "POST":
-        summary_start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
-        summary_end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
+def summary_util(handle, filters, start_date = None, end_date = None):
+    summary_start_date = datetime.datetime.today() -  datetime.timedelta(days=1) if not start_date else start_date
+    summary_end_date = datetime.datetime.today() if not end_date else end_date
     app.logger.info("Retrieving dashboard summary for timerange %s and %s", summary_start_date, summary_end_date)
     dashboard_summary = get_summary(handle, summary_start_date, summary_end_date)
     app.logger.info("Retrieved Dashboard summary")
     return dashboard_summary, summary_start_date
 
-def chart_util(request, handle, filters):
-    chart_start_date = datetime.datetime.today()-datetime.timedelta(days=15)
-    chart_end_date   = datetime.datetime.today()-datetime.timedelta(days=1)
-    if request.method == "POST":
-        chart_start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
-        chart_end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
-        print(chart_start_date)
+def chart_util(handle, filters, start_date = None, end_date = None):
+    chart_start_date = datetime.datetime.today()-datetime.timedelta(days=15) if not start_date else start_date
+    chart_end_date   = datetime.datetime.today()-datetime.timedelta(days=1) if not end_date else end_date
+    print(chart_start_date)
     app.logger.info("Retrieving chart data for timerange %s and %s", chart_start_date, chart_end_date)
     following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = get_chart_data(handle, chart_start_date, chart_end_date, filters)
     app.logger.info("Retrieved chart data")
-    return following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data
+    return chart_start_date, chart_end_date, following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data
 
-def mv_avg_util(request, handle, filters):
+def mv_avg_util(handle, filters, start_date = None, end_date = None):
     if "fvsmnlikec" not in filters:
         app.logger.info("Moving Avg Chart not selected")
         app.logger.debug(filters)
         return None
 
-    mv_avg_start_date = datetime.datetime.today() - datetime.timedelta(days=15)
-    mv_avg_end_date = datetime.datetime.today() - datetime.timedelta(days=1)
-    if request.method == "POST":
-        mv_avg_start_date = datetime.datetime.strptime(request.form['startdate'], "%m/%d/%Y")
-        mv_avg_end_date = datetime.datetime.strptime(request.form['enddate'], "%m/%d/%Y")
+    mv_avg_start_date = datetime.datetime.today() - datetime.timedelta(days=15) if not start_date else start_date
+    mv_avg_end_date = datetime.datetime.today() - datetime.timedelta(days=1) if not end_date else start_date
     mv_avg_start_date = mv_avg_start_date - datetime.timedelta(days=7)
     media_likes_mv_avg = get_likes_moving_average(handle, mv_avg_start_date, mv_avg_end_date)
     return media_likes_mv_avg
+
+def get_board_data(handle, request_dict):
+  iprofile_today = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
+  followers_today = iprofile_today.followers_count if iprofile_today else 0
+  engagement_today = iprofile_today.engagement_rate if iprofile_today else 0.0
+
+  filters = session.get("_filters", ALL_FILTERS)
+  print(filters)
+  daily_activity, monthly_activity = activity_util(handle, filters)
+  start_date = datetime.datetime.strptime(request_dict['startdate'], "%m/%d/%Y") if 'startdate' in request_dict else None
+  end_date = datetime.datetime.strptime(request_dict['enddate'], "%m/%d/%Y") if 'end_date' in request_dict else None
+  dashboard_summary, summary_start_date = summary_util(handle, filters, start_date, end_date)
+  fstart_date, fend_date, following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = chart_util(handle, filters, start_date, end_date)
+  media_likes_mv_avg = mv_avg_util(handle, filters, start_date, end_date)
+  return followers_today, engagement_today, daily_activity, monthly_activity, dashboard_summary, summary_start_date, filters,\
+            fstart_date, fend_date, following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data, media_likes_mv_avg
 
 
 @app.route("/ig/filters", methods = ["POST"])
@@ -119,6 +123,47 @@ def set_filters():
     print(session)
     return jsonify(msg = "Filters updated. Please refresh the page.")
 
+@app.route("/ig/report/store", methods = ["POST"])
+def store_report():
+    print("Storing reports")
+    blobf = request.files['content']
+    fn = request.form['filename']
+    filename = secure_filename(fn)
+    blobf.save(os.path.join(app.static_folder, 'reports', filename))
+    return jsonify(fileloc = url_for('static', filename = "reports/" +  fn))
+
+
+@app.route("/ig/report/preview/<string:handle>", methods = ["POST"])
+@login_required
+def preview_report_ui(handle, user = None):
+  app.logger.info('Previewing report on  handle %s', handle)
+  detail_str = request.form['detail_str']
+  fstart_date = datetime.datetime.strptime(request.form['fstart_date'], "%m/%d/%Y")
+  fend_date = datetime.datetime.strptime(request.form['fend_date'], "%m/%d/%Y")
+  print(request.form['dashboard_summary'])
+  dashboard_summary = eval(request.form['dashboard_summary'])
+  print(dashboard_summary)
+  summary_start_date = request.form['summary_start_date']
+  print(detail_str, fstart_date, fend_date, dashboard_summary, summary_start_date)
+  following_raw_data = eval(request.form['following_raw_data'])
+  followers_raw_data = eval(request.form['followers_raw_data'])
+  media_likes_raw_data = eval(request.form['media_likes_raw_data'])
+  engagement_rate_raw_data = eval(request.form['engagement_rate_raw_data'])
+  print(following_raw_data)
+  media_likes_mv_avg = eval(request.form['media_likes_mv_avg'])
+  daily_activity = eval(request.form['daily_activity'])
+  monthly_activity = eval(request.form['monthly_activity'])
+  followers_today = request.form['followers_today']
+  engagement_today = float(request.form['engagement_today']) * 100.
+  logofile = request.form['logofile']
+
+  return render_template('preview.html', logo = logofile, all_filters = FILTER_DICT, filters = session.get("_filters", ALL_FILTERS), lf = session.get("_filters", ALL_FILTERS)[-1],\
+                        handle = handle, iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, fstart_date = '{:%m-%d-%Y}'.format(fstart_date), \
+                        fend_date = '{:%m-%d-%Y}'.format(fend_date), dashboard_summary = dashboard_summary, summary_start_date = summary_start_date,\
+                        following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
+                        engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
+                        monthly_activity = monthly_activity, followers_today = followers_today, engagement_today = engagement_today)
+
 @app.route("/ig/<string:handle>", methods = ["GET", "POST"])
 @login_required
 def instaboard(handle, user=None):
@@ -127,23 +172,17 @@ def instaboard(handle, user=None):
   if handle not in accounts:
     session.clear()
     return render_template('login.html', msg = "Not a registered account to monitor.")
-
-  iprofile_today = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(datetime.datetime.today())).first()
-  followers_today = iprofile_today.followers_count if iprofile_today else 0
-  engagement_today = iprofile_today.engagement_rate if iprofile_today else 0.0
-
-  filters = session.get("_filters", ALL_FILTERS)
-  print(filters)
-  daily_activity, monthly_activity = activity_util(handle, filters)
-  dashboard_summary, summary_start_date = summary_util(request, handle, filters)
   detail_str = "the past 14 days" if request.method == "GET" else " between %s and %s" % (request.form['startdate'], request.form['enddate'])
-  following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = chart_util(request, handle, filters)
-  media_likes_mv_avg = mv_avg_util(request, handle, filters)
+
+  request_dict = request.form if request.method == "POST" else {}
+  followers_today, engagement_today, daily_activity, monthly_activity, dashboard_summary, summary_start_date, filters, \
+  fstart_date, fend_date, following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data, media_likes_mv_avg = \
+            get_board_data(handle, request_dict)
 
   return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
                         profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, handle = handle, \
-                        iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str,  \
-                        dashboard_summary = dashboard_summary, summary_start_date = summary_start_date,\
+                        iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, fstart_date = UI_DATE_FS.format(fstart_date), \
+                        fend_date = UI_DATE_FS.format(fend_date), dashboard_summary = dashboard_summary, summary_start_date = summary_start_date,\
                         following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
                         engagement_rate_raw_data = engagement_rate_raw_data, media_likes_mv_avg = media_likes_mv_avg, daily_activity = daily_activity, \
                         monthly_activity = monthly_activity, followers_today = followers_today, engagement_today = engagement_today)
@@ -204,7 +243,7 @@ def admin(user = None):
         session.clear()
         return render_template('login.html', msg = "Not allowed to do perform this action.")
     all_users = User.query.all()
-    return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles],\
+    return render_template('admin.html', roles = [x.name for x in user.roles], accounts = sorted([x.instagram_id for x in user.iprofiles]),\
                 username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
 
 @app.route("/admin/<int:id>/max_accounts", methods = ["POST"])

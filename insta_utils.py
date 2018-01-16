@@ -41,7 +41,7 @@ def get_summary(handle, start_date, end_date):
     return {'Follower Change' : endp.followers_count - (startp.followers_count if startp else 0),
                        'Following Change' : endp.following_count -  (startp.following_count if startp else 0),
                        'Post Change' : endp.media_likes -  (startp.media_likes if startp else 0),
-                       'Engagement Rate Change' : "{:3.1f} %".format((endp.engagement_rate - (startp.engagement_rate if startp else 0))*100)}
+                       'ER Change' : "{:3.1f} %".format((endp.engagement_rate - (startp.engagement_rate if startp else 0))*100)}
 
 
 def get_activity(handle):
@@ -53,14 +53,14 @@ def get_activity(handle):
   ep = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(end_date)).first()
 
   deng = diffact(tsp.engagement_rate if tsp else 0, ep.engagement_rate)
-  deng = ["{:.2f} %".format(deng[0]), deng[1], deng[2]]
+  deng = ["{:.2f} %".format(deng[0] *100), deng[1], deng[2]]
   daily_activity = {'following' : diffact(tsp.following_count if tsp else 0, ep.following_count), \
                     'followers' : diffact(tsp.followers_count if tsp else 0, ep.followers_count), \
                     'engagement' : deng, \
                     'likes' : diffact(tsp.media_likes if tsp else 0, ep.media_likes)}#, 'media' : [tsp.media_count if tsp else 0, ep.media_count]})
 
   meng = diffact(msp.engagement_rate if msp else 0, ep.engagement_rate)
-  meng = ["{:.2f} %".format(meng[0]), meng[1], meng[2]]
+  meng = ["{:.2f} %".format(meng[0] * 100), meng[1], meng[2]]
   monthly_activity = {'following' : diffact(msp.following_count if msp else 0, ep.following_count), \
                       'followers' : diffact(msp.followers_count if msp else 0, ep.followers_count), \
                       'engagement' : meng, \

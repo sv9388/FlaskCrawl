@@ -1,4 +1,4 @@
-import scrapy, json, sqlite3, logging, datetime, os, psycopg2
+import scrapy, json, logging, datetime, os, psycopg2
 
 insta_fs = "https://www.instagram.com/%s/?__a=1"
 MAX_ENGAGEMENT_POSTS = 10
