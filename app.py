@@ -15,7 +15,7 @@ token_id = "access_token"
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 ALL_FILTERS = ['followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
 FILTER_DICT = {'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
-SERVER_NAME =  "analytics.socialmedia.com" #TEST: "smsilo.pythonanywhere.com" 
+SERVER_NAME =  "analytics.socialmedia.com" #TEST: "smsilo.pythonanywhere.com"
 UI_DATE_FS = '{:%m/%d/%Y}'
 
 def allowed_file(filename):
@@ -180,7 +180,7 @@ def instaboard(handle, user=None):
             get_board_data(handle, request_dict)
 
   return render_template('instaboard.html', roles = [x.name for x in user.roles], accounts = accounts, username = user.username.upper(), \
-                        profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, handle = handle, \
+                        profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, handle = handle, \
                         iprofile_pic = get_insta_profile_pic(handle), detail_str = detail_str, fstart_date = UI_DATE_FS.format(fstart_date), \
                         fend_date = UI_DATE_FS.format(fend_date), dashboard_summary = dashboard_summary, summary_start_date = summary_start_date,\
                         following_raw_data = following_raw_data, followers_raw_data = followers_raw_data,  media_likes_raw_data = media_likes_raw_data, \
@@ -196,7 +196,7 @@ def instaaccounts(user = None):
   if request.method == "GET":
     print(user.email)
     return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), \
-                            profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, account_limit = user.max_insta_accounts)
+                            profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, account_limit = user.max_insta_accounts)
   if request.method == "POST":
     updated_accounts = request.form['accounts']
     updated_accounts = list(set(updated_accounts.split(',')))
@@ -204,11 +204,11 @@ def instaaccounts(user = None):
     incorrect_accounts = list(set(updated_accounts) - set(correct_accounts))
     if len(updated_accounts) != len(correct_accounts):
         return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), \
-                profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                 account_limit = user.max_insta_accounts, msg = "Instagram handles can contain alphanumeric character, _ and . The following accounts don't meet that criteria: " + ", ".join(incorrect_accounts))
     if len(correct_accounts) > user.max_insta_accounts:
         return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = existing_accounts, username = user.username.upper(), \
-                            profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                            profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                             account_limit = user.max_insta_accounts, msg = "You cannot monitor more than %d accounts"%user.max_insta_accounts)
 
     delete_accounts = user.iprofiles
@@ -229,7 +229,7 @@ def instaaccounts(user = None):
     db.session.commit()
     print(','.join([x.instagram_id for x in user.iprofiles]))
     return render_template('instaaccounts.html', roles = [x.name for x in user.roles], accounts = sorted([x.instagram_id for x in user.iprofiles]), \
-            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
             account_limit = user.max_insta_accounts, msg = "Updated the account handles you are monitoring. Come back tomorrow for some interesting info!")
 
   session.clear()
@@ -244,7 +244,7 @@ def admin(user = None):
         return render_template('login.html', msg = "Not allowed to do perform this action.")
     all_users = User.query.all()
     return render_template('admin.html', roles = [x.name for x in user.roles], accounts = sorted([x.instagram_id for x in user.iprofiles]),\
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
 
 @app.route("/admin/<int:id>/max_accounts", methods = ["POST"])
 @login_required
@@ -260,7 +260,7 @@ def max_acc_edit(id, user = None):
 
     all_users = User.query.all()
     return render_template('admin.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
+            username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, all_users = all_users)
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
@@ -306,7 +306,7 @@ def upgrade(user = None):
   filters = session.get("_filters", ALL_FILTERS)
   tiers = Tier.query.all()
   return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
             current_tier = user.tier.name, tiers = tiers)
 
 @app.route('/ppsuccess/<int:planid>', methods = ["GET"])
@@ -317,24 +317,24 @@ def upgradeplansuccess(planid, user = None):
     tiers = Tier.query.all()
     if request.args['st'].lower().strip() != "completed":
         return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                        username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                        username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                         current_tier = user.tier.name, tiers = tiers, msg = "It looks like your transaction didn't go through. Please contact admin in case amount has been withdrawn.")
 
     paid_amt = request.args['amt'].strip()
     if paid_amt != "":
         return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                    username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                    username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                     current_tier = user.tier.name, tiers = tiers, msg = "It looks like you haven't paid yet. Please contact admin in case amount has been withdrawn.")
 
     mod_tier = Tier.filter_by(id = planid).first()
     if not mod_tier:
         return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                    username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                    username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                     current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
 
     if int(paid_amt) != mod_tier.price_pm:
         return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                    username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                    username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                     current_tier = user.tier.name, tiers = tiers, msg = "This is not the correct amount for " + mod_tier.name + " plan. Please ensure that you are on the subscription of  " + str(mod_tier.price_pm) + " per month.")
 
     user.tier = mod_tier
@@ -343,7 +343,7 @@ def upgradeplansuccess(planid, user = None):
     db.session.commit()
     print("Updated to user tier " + user.tier.name)
     return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                 current_tier = user.tier.name, tiers = tiers)
 
 
@@ -353,7 +353,7 @@ def upgradeplancancel(planid, user = None):
     filters = session.get("_filters", ALL_FILTERS)
     tiers = Tier.query.all()
     return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                 current_tier = user.tier.name, tiers = tiers, msg = "Your payment was cancelled.")
 
 @app.route("/upgrade/<int:planid>")
@@ -364,11 +364,11 @@ def upgrade_plan(planid, user = None):
   tier = Tier.query.filter_by(id = planid).first()
   if not tier:
     return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                 current_tier = user.tier.name, tiers = tiers, msg = "Invalid tier. Please choose from the list of tiers we have.")
   if user.tier.id == tier.id:
     return render_template('upgrade.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
                 current_tier = user.tier.name, tiers = tiers, msg = "This is your current tier. Nothing to do.")
 
   paypalr = "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=%s" % tier.paypal_button_link
@@ -381,14 +381,14 @@ def app_user(user = None):
   filters = session.get("_filters", ALL_FILTERS)
   if request.method == 'GET':
     return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
   if request.method == "POST":
     if request.form['username'] != '':
         user.username = request.form['username']
 
     if request.form['password'] != request.form['cpassword']:
         return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-                username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
+                username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, email = user.email)
 
     if request.form['password'] != '':
         user.hash_password(request.form['password'])
@@ -397,12 +397,12 @@ def app_user(user = None):
     print(pp_file)
     if pp_file.filename == '':
       return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
             email = user.email, msg = "Please upload a valid file. Accepted filetypes are png and jpg. Maximum possible file size is 4MB.")
 
     if not allowed_file(pp_file.filename):
       return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
             email = user.email, msg = "Accepted filetypes are png and jpg. Maximum possible file size is 4MB.")
 
     filename = secure_filename(pp_file.filename)
@@ -413,7 +413,7 @@ def app_user(user = None):
     db.session.add(user)
     db.session.commit()
     return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
-            username = user.username.upper(), profile_pic = url_for('static', filename = '/logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
+            username = user.username.upper(), profile_pic = url_for('static', filename = 'logos/'+user.profile_pic), all_filters = FILTER_DICT, filters = filters, \
             email = user.email, msg = "User details upgraded successfully.")
 
 @app.route('/password/forgot', methods = ['GET', 'POST'])
