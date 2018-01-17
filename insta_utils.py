@@ -30,7 +30,7 @@ def get_chart_data(handle, start_date, end_date, filters):
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
   followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles] if "followersc" in reqd or "fvsmnlikec" in reqd else None
   engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles] if "engagementc" in reqd else None
-  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles] if "likesc" in reqd else None
+  media_likes_raw_data = [[db_date(x.date), x.posts_count] for x in iprofiles] if "likesc" in reqd else None
   return following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data
 
 def get_summary(handle, start_date, end_date):
@@ -40,7 +40,7 @@ def get_summary(handle, start_date, end_date):
         return default_summary
     return {'Follower Change' : endp.followers_count - (startp.followers_count if startp else 0),
                        'Following Change' : endp.following_count -  (startp.following_count if startp else 0),
-                       'Post Change' : endp.media_likes -  (startp.media_likes if startp else 0),
+                       'Post Change' : endp.posts_count -  (startp.posts_count if startp else 0),
                        'ER Change' : "{:3.1f} %".format((endp.engagement_rate - (startp.engagement_rate if startp else 0))*100)}
 
 
@@ -57,7 +57,7 @@ def get_activity(handle):
   daily_activity = {'following' : diffact(tsp.following_count if tsp else 0, ep.following_count), \
                     'followers' : diffact(tsp.followers_count if tsp else 0, ep.followers_count), \
                     'engagement' : deng, \
-                    'likes' : diffact(tsp.media_likes if tsp else 0, ep.media_likes)}#, 'media' : [tsp.media_count if tsp else 0, ep.media_count]})
+                    'likes' : diffact(tsp.posts_count if tsp else 0, ep.posts_count)}#, 'media' : [tsp.media_count if tsp else 0, ep.media_count]})
 
   meng = diffact(msp.engagement_rate if msp else 0, ep.engagement_rate)
   meng = ["{:.2f} %".format(meng[0] * 100), meng[1], meng[2]]
