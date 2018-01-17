@@ -92,6 +92,7 @@ class IprofileData(db.Model):
     date = db.Column(db.DateTime)
     followers_count = db.Column(db.Integer, default = 0)
     following_count = db.Column(db.Integer, default = 0)
+    posts_count = db.Column(db.Integer, default = 0)
     media_likes = db.Column(db.Integer, default = 0)
     engagement_rate = db.Column(db.Float, default = 0.0)
     iprofile_id = db.Column(db.String(255), db.ForeignKey('iprofile.instagram_id'), nullable=False)
