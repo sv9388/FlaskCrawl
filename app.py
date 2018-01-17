@@ -80,8 +80,6 @@ def summary_util(handle, filters, start_date = None, end_date = None):
 def chart_util(handle, filters, start_date = None, end_date = None):
     chart_start_date = datetime.datetime.today()-datetime.timedelta(days=15) if not start_date else start_date
     chart_end_date   = datetime.datetime.today()-datetime.timedelta(days=1) if not end_date else end_date
-    print(chart_start_date)
-    print(chart_end_date)
     app.logger.info("Retrieving chart data for timerange %s and %s", chart_start_date, chart_end_date)
     following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = get_chart_data(handle, chart_start_date, chart_end_date, filters)
     app.logger.info("Retrieved chart data")
@@ -108,7 +106,7 @@ def get_board_data(handle, request_dict):
   print(filters)
   daily_activity, monthly_activity = activity_util(handle, filters)
   start_date = datetime.datetime.strptime(request_dict['startdate'], "%m/%d/%Y") if 'startdate' in request_dict else None
-  end_date = datetime.datetime.strptime(request_dict['enddate'], "%m/%d/%Y") if 'end_date' in request_dict else None
+  end_date = datetime.datetime.strptime(request_dict['enddate'], "%m/%d/%Y") if 'enddate' in request_dict else None
   dashboard_summary, summary_start_date = summary_util(handle, filters, start_date, end_date)
   fstart_date, fend_date, following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data = chart_util(handle, filters, start_date, end_date)
   media_likes_mv_avg = mv_avg_util(handle, filters, start_date, end_date)
