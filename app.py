@@ -92,7 +92,7 @@ def mv_avg_util(handle, filters, start_date = None, end_date = None):
         return None
 
     mv_avg_start_date = datetime.datetime.today() - datetime.timedelta(days=15) if not start_date else start_date
-    mv_avg_end_date = datetime.datetime.today() - datetime.timedelta(days=1) if not end_date else start_date
+    mv_avg_end_date = datetime.datetime.today() - datetime.timedelta(days=1) if not end_date else end_date
     mv_avg_start_date = mv_avg_start_date - datetime.timedelta(days=7)
     media_likes_mv_avg = get_likes_moving_average(handle, mv_avg_start_date, mv_avg_end_date)
     return media_likes_mv_avg
