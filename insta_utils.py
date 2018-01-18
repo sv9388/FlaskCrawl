@@ -30,7 +30,7 @@ def get_chart_data(handle, start_date, end_date, filters):
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
   followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles] if "followersc" in reqd or "fvsmnlikec" in reqd else None
   engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles] if "engagementc" in reqd else None
-  media_likes_raw_data = [[db_date(x.date), x.posts_count] for x in iprofiles] if "likesc" in reqd else None
+  media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles] if "likesc" in reqd else None
   return following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data
 
 def get_summary(handle, start_date, end_date):
