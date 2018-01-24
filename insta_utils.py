@@ -52,6 +52,11 @@ def get_activity(handle):
   msp = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(mstart_date)).first()
   ep = IprofileData.query.filter_by(iprofile_id = handle).filter_by(date = DB_DATE_FS.format(end_date)).first()
 
+  if not ep:
+    daily_activity = {'following' : 0, 'followers' : 0, 'engagement' : 0, 'likes' : 0}
+    monthly_activity = {'following' : 0, 'followers' : 0, 'engagement' : 0, 'likes' : 0}
+    return daily_activity, monthly_activity
+
   deng = diffact(tsp.engagement_rate if tsp else 0, ep.engagement_rate)
   deng = ["{:.2f} %".format(deng[0] *100), deng[1], deng[2]]
   daily_activity = {'following' : diffact(tsp.following_count if tsp else 0, ep.following_count), \
