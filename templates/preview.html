@@ -28,7 +28,6 @@
 </style>
 <link rel="stylesheet" href="{{url_for('static', filename = 'a4.css')}}" />
 <script src="https://unpkg.com/jspdf@latest/dist/jspdf.min.js"></script>
-<script src="https://github.com/niklasvh/html2canvas/releases/download/v1.0.0-alpha.9/html2canvas.min.js"></script>
 <script src="https://rawgit.com/eKoopmans/html2pdf/pdf-callback/dist/html2pdf.bundle.js"></script>
 
     {% macro print_pagebreak(cnt, last = False) %}
@@ -572,7 +571,7 @@ $(".dashboarddateinfo").text(formatDate($yesterday));
             margin:       0.0,
             image:        { type: 'jpeg', quality: 1},
             pdfCallback: uploadpdf,
-            html2canvas:  { dpi: 192, letterRendering: true ,scale: 2},
+            //html2canvas:  { dpi: 192, letterRendering: true ,scale: 2},
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
          });
         $("#loading").hide();
