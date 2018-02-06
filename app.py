@@ -377,6 +377,7 @@ def upgrade_plan(planid, user = None):
 @app.route('/user', methods = ['GET', 'POST'])
 @login_required
 def app_user(user = None):
+  print("Upload folder", app.config['UPLOAD_FOLDER'])
   filters = session.get("_filters", ALL_FILTERS)
   if request.method == 'GET':
     return render_template('profile.html', roles = [x.name for x in user.roles], accounts = [x.instagram_id for x in user.iprofiles], \
