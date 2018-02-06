@@ -1,8 +1,12 @@
+import os
 from flask import session, url_for, Flask, request, redirect, render_template, abort, jsonify
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 import datetime, binascii, os, re, logging, sys
 
+ROOT_DIR = os.path.dirname(__file__)
+app.config['UPLOAD_FOLDER'] = "static/logos"
+#LOGOS_FOLDER = os.path.join(ROOT_DIR + "/" + app.config['UPLOAD_FOLDER'])
 app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -407,7 +411,7 @@ def app_user(user = None):
 
     filename = secure_filename(pp_file.filename)
     filename = str(user.id)+"_"+filename
-    pp_file.save(os.path.join(app.static_folder, 'logos', filename))
+    pp_file.save(os.path.join(ROOT_DIR, app.config['UPLOAD_FOLDER'], filename))
 
     user.profile_pic = filename
     db.session.add(user)
