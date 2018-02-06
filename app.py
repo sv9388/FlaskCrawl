@@ -5,10 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 import datetime, binascii, os, re, logging, sys
 
 ROOT_DIR = os.path.dirname(__file__)
-app.config['UPLOAD_FOLDER'] = "static/logos"
 #LOGOS_FOLDER = os.path.join(ROOT_DIR + "/" + app.config['UPLOAD_FOLDER'])
 app = Flask(__name__)
 app.config.from_pyfile("./insta_cfg.py")
+app.config['UPLOAD_FOLDER'] = "static/logos"
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 
