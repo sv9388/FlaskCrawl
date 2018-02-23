@@ -2,7 +2,7 @@ import os
 from flask import session, url_for, Flask, request, redirect, render_template, abort, jsonify
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
-import datetime, binascii, os, re, logging, sys
+import datetime, binascii, re, logging, sys
 
 ROOT_DIR = os.path.dirname(__file__)
 #LOGOS_FOLDER = os.path.join(ROOT_DIR + "/" + app.config['UPLOAD_FOLDER'])
@@ -17,8 +17,8 @@ db = SQLAlchemy(app)
 token_id = "access_token"
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-ALL_FILTERS = ['followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
-FILTER_DICT = {'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
+ALL_FILTERS = ['followersc', 'followersdiffc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
+FILTER_DICT = {'followersc' : "Followers Chart", "followersdiffc" : "Followers Difference Bar Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
 SERVER_NAME =  "analytics.socialmedia.com" #TEST: "smsilo.pythonanywhere.com"
 UI_DATE_FS = '{:%m/%d/%Y}'
 
@@ -277,6 +277,8 @@ def login():
     user = User.query.filter_by(email = request.form['email']).first()
     if not user:
       return render_template('login.html', msg = "Incorrect email")
+    if not user.verify_password(request.form["password"]):
+      return render_template('login.html', msg = "Incorrect password")
     session[token_id] = user.generate_auth_token()
     return redirect(url_for('instaaccounts'))
 
