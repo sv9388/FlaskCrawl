@@ -17,8 +17,8 @@ db = SQLAlchemy(app)
 token_id = "access_token"
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-ALL_FILTERS = ['followersc', 'followersdiffc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
-FILTER_DICT = {'followersc' : "Followers Chart", "followersdiffc" : "Followers Difference Bar Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
+ALL_FILTERS = ['followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
+FILTER_DICT = {'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
 SERVER_NAME =  "analytics.socialmedia.com" #TEST: "smsilo.pythonanywhere.com"
 UI_DATE_FS = '{:%m/%d/%Y}'
 
