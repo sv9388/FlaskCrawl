@@ -17,8 +17,8 @@ db = SQLAlchemy(app)
 token_id = "access_token"
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
-ALL_FILTERS = ['followersc', 'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
-FILTER_DICT = {'followersc' : "Followers Chart", 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
+ALL_FILTERS = ["summary", 'followersc', 'followersdiffc',  'activity', 'engagementc', 'likesc', 'fvsmnlikec' ]
+FILTER_DICT = {"summary" : "Summary", 'followersc' : "Followers Chart", 'followersdiffc' : 'Followers Difference Chart', 'activity' : "Activity", 'engagementc' : "Engagement Chart", 'likesc' : "Likes Chart", 'fvsmnlikec' : "Followers Vs Likes Chart"}
 SERVER_NAME =  "analytics.socialmedia.com" #TEST: "smsilo.pythonanywhere.com"
 UI_DATE_FS = '{:%m/%d/%Y}'
 
@@ -74,6 +74,10 @@ def activity_util(handle, filters):
     return daily_activity, monthly_activity
 
 def summary_util(handle, filters, start_date = None, end_date = None):
+    if not "summary" in filters:
+        app.logger.info("Summary not selected")
+        app.logger.debug(filters)
+        return None,  None
     summary_start_date = datetime.datetime.today() -  datetime.timedelta(days=1) if not start_date else start_date
     summary_end_date = datetime.datetime.today() if not end_date else end_date
     app.logger.info("Retrieving dashboard summary for timerange %s and %s", summary_start_date, summary_end_date)
@@ -256,6 +260,7 @@ def max_acc_edit(id, user = None):
     if not 'admin' in [x.name for x in user.roles]:
         session.clear()
         return render_template('login.html', msg = "Not allowed to do perform this action.")
+    filters = session.get("_filters", ALL_FILTERS)
     eduser = User.query.filter_by(id = id).first()
     eduser.max_insta_accounts = int(request.form['value'])
     db.session.add(eduser)

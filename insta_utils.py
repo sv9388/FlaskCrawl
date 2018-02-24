@@ -28,7 +28,7 @@ def get_chart_data(handle, start_date, end_date, filters):
   iprofiles = IprofileData.query.filter_by(iprofile_id = handle).filter(IprofileData.date >= DB_DATE_FS.format(start_date)).filter(IprofileData.date <= DB_DATE_FS.format(end_date)).order_by(IprofileData.date).all()
   db_date = lambda dt : dt.strftime('%Y/%m/%d')
   following_raw_data =   [[db_date(x.date), x.following_count] for x in iprofiles ]
-  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles] if "followersc" in reqd or "fvsmnlikec" in reqd else None
+  followers_raw_data =   [[db_date(x.date), x.followers_count] for x in iprofiles] if "followersc" in reqd or "fvsmnlikec" in reqd or "followersdiffc" in reqd else None
   engagement_rate_raw_data = [[db_date(x.date), x.engagement_rate] for x in iprofiles] if "engagementc" in reqd else None
   media_likes_raw_data = [[db_date(x.date), x.media_likes] for x in iprofiles] if "likesc" in reqd else None
   return following_raw_data, followers_raw_data, engagement_rate_raw_data, media_likes_raw_data
