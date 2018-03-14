@@ -75,4 +75,4 @@ def get_activity(handle):
 
 def get_insta_profile_pic(handle):
     r = requests.get("""https://www.instagram.com/%s/?__a=1"""%handle)
-    return json.loads(r.content)['user']['profile_pic_url']
+    return json.loads(r.content)['graphql']['user']['profile_pic_url']
